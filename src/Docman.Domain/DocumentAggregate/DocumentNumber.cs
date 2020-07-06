@@ -7,5 +7,7 @@ namespace Docman.Domain.DocumentAggregate
         public DocumentNumber(string value) : base(value)
         {
         }
+        
+        public override string ToString() => Value;
     }
 }
