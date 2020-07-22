@@ -9,5 +9,9 @@
       <ProjectReference Include="..\Docman.Infrastructure\Docman.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.6" />
+    </ItemGroup>
+
 
 </Project>

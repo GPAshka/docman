@@ -1,9 +1,9 @@
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json.Converters;
 
 namespace Docman.API
 {
@@ -20,11 +20,10 @@ namespace Docman.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers()
-                .AddJsonOptions(options =>
+                .AddNewtonsoftJson(options =>
                 {
-                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
                 });
-            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
