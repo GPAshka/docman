@@ -6,6 +6,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Docman.Domain\Docman.Domain.csproj" />
+      <ProjectReference Include="..\Docman.Infrastructure\Docman.Infrastructure.csproj" />
     </ItemGroup>
 
 

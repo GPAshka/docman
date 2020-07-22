@@ -5,7 +5,13 @@ namespace Docman.API.Commands
 {
     public class CreateDocumentCommand
     {
-        public Guid DocumentId { get; set; }
-        public DocumentNumber DocumentNumber { get; set; }
+        public CreateDocumentCommand(Guid documentId, DocumentNumber documentNumber)
+        {
+            DocumentId = documentId;
+            DocumentNumber = documentNumber;
+        }
+
+        public Guid DocumentId { get; }
+        public DocumentNumber DocumentNumber { get; }
     }
 }
