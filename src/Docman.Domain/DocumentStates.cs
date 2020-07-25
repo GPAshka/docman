@@ -6,7 +6,7 @@ using static LanguageExt.Prelude;
 
 namespace Docman.Domain
 {
-    public static class DocumentStateTransitions
+    public static class DocumentStates
     {
         public static Document CreateDocument(this DocumentCreatedEvent evt) 
             => new Document(evt.EntityId, evt.Number);
@@ -15,7 +15,7 @@ namespace Docman.Domain
         {
             return evt switch
             {
-                DocumentApprovedEvent _ => document.WithStatus(DocumentStatus.Approved),
+                DocumentApprovedEvent _ => document.WithStatus(DocumentStatus.Approved)
             };
         }
 

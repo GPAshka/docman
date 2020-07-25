@@ -1,14 +1,15 @@
 ﻿using System;
-using Docman.API.CommandHandlers;
+using System.Threading.Tasks;
 using Docman.API.Commands;
-using Docman.API.Requests;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
+using Docman.Domain.Events;
 using Docman.Infrastructure.EventStore;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace Docman.API.Controllers
 {
@@ -33,43 +34,51 @@ namespace Docman.API.Controllers
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        public IActionResult CreateDocument([FromBody] CreateDocumentRequest request)
+        public IActionResult CreateDocument([FromBody] CreateDocumentCommand command)
         {
-            if (request.DocumentId == Guid.Empty)
-                request.DocumentId = Guid.NewGuid();
-
-            // TODO validate request
-            
-            var command = new CreateDocumentCommand(request.DocumentId, new DocumentNumber(request.DocumentNumber));
-            
-            //handle command
-            var (evt, newState) = DocumentCommandHandlers.Create(command);
-            
-            // TODO save and publish event
+            if (command.DocumentId == Guid.Empty)
+                command = command.WithDocumentId(Guid.NewGuid());
 
             var eventsRepository = new EventsRepository(new Uri("tcp://admin:changeit@127.0.0.1:1113"));
-            eventsRepository.AddEvent(evt);
             
-            return CreatedAtAction(nameof(GetDocument), new {documentId = command.DocumentId}, newState);
+            return Success<Error, CreateDocumentCommand>(command)
+                .Bind(cmd => Document.Create(cmd.DocumentId, cmd.DocumentNumber))
+                .Do(doc =>
+                {
+                    var evt = new DocumentCreatedEvent(doc.Id, doc.Number);
+                    eventsRepository.AddEvent(evt);
+                })
+                .Match<IActionResult>(
+                    Succ: d => Created(d.Id.ToString(), null), 
+                    Fail: errors => BadRequest(string.Join(",", errors)));
+
+            // TODO save and publish event
+            //return CreatedAtAction(nameof(GetDocument), new {documentId = command.DocumentId}, newState);
         }
 
         [HttpPost]
         [Route("approve")]
-        public IActionResult ApproveDocument([FromBody] ApproveDocumentCommand command)
+        public async Task<IActionResult> ApproveDocument([FromBody] ApproveDocumentCommand command)
         {
             //TODO validate request
             //TODO get document
             
             var eventsRepository = new EventsRepository(new Uri("tcp://admin:changeit@127.0.0.1:1113"));
-            return eventsRepository
-                .ReadEvents(command.DocumentId)
-                .Map(DocumentStateTransitions.From)
-                .Result
-                .Map(d => d.Approve(command))
-                .Do(res => eventsRepository.AddEvent(res.Event))
-                .Match<IActionResult>(
-                    Some: result => Ok(result.Document),
-                    None: BadRequest);
+
+            return await eventsRepository.ReadEvents(command.DocumentId)
+                .Map(DocumentStates.From)
+                .MapT(d => d.Approve())
+                .MapT(d => d.Do(dd =>
+                {
+                    var evt = new DocumentApprovedEvent(dd.Id);
+                    eventsRepository.AddEvent(evt);
+                }))
+                .Match(
+                    None: NotFound,
+                    Some: doc => doc.Match<IActionResult>(
+                        Succ: _ => Ok(),
+                        Fail: errors => BadRequest(string.Join(",", errors))
+                    ));
         }
     }
 }

@@ -1,17 +1,19 @@
 using System;
-using Docman.Domain.DocumentAggregate;
 
 namespace Docman.API.Commands
 {
     public class CreateDocumentCommand
     {
-        public CreateDocumentCommand(Guid documentId, DocumentNumber documentNumber)
+        public Guid DocumentId { get; }
+        public string DocumentNumber { get; }
+        
+        public CreateDocumentCommand(Guid documentId, string documentNumber)
         {
             DocumentId = documentId;
             DocumentNumber = documentNumber;
         }
 
-        public Guid DocumentId { get; }
-        public DocumentNumber DocumentNumber { get; }
+        public CreateDocumentCommand WithDocumentId(Guid documentId) =>
+            new CreateDocumentCommand(documentId, DocumentNumber);
     }
 }
