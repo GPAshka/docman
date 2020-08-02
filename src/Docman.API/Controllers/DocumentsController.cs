@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Docman.API.Commands;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
-using Docman.Domain.Events;
 using Docman.Infrastructure.EventStore;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
@@ -43,13 +42,9 @@ namespace Docman.API.Controllers
             
             return Success<Error, CreateDocumentCommand>(command)
                 .Bind(cmd => Document.Create(cmd.DocumentId, cmd.DocumentNumber))
-                .Do(doc =>
-                {
-                    var evt = new DocumentCreatedEvent(doc.Id, doc.Number);
-                    eventsRepository.AddEvent(evt);
-                })
+                .Do(res => eventsRepository.AddEvent(res.Event))
                 .Match<IActionResult>(
-                    Succ: d => Created(d.Id.ToString(), null), 
+                    Succ: res => Created(res.Document.Id.ToString(), null), 
                     Fail: errors => BadRequest(string.Join(",", errors)));
 
             // TODO save and publish event

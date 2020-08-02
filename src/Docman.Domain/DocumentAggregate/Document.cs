@@ -30,10 +30,11 @@ namespace Docman.Domain.DocumentAggregate
             return (newState, evt as Event);
         }
 
-        public static Validation<Error, Document> Create(Guid id, string number)
+        public static Validation<Error, (Document Document, Event Event)> Create(Guid id, string number)
         {
             return DocumentNumber.Create(number)
-                .Map(num => new Document(id, num));
+                .Map(num => new Document(id, num))
+                .Map(d => (d, new DocumentCreatedEvent(d.Id, d.Number) as Event));
         }
     }
 }
