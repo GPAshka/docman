@@ -68,11 +68,8 @@ namespace Docman.API.Controllers
             return await eventsRepository.ReadEvents(command.DocumentId)
                 .Map(DocumentStates.From)
                 .MapT(d => d.Approve())
-                .MapT(d => d.Do(dd =>
-                {
-                    var evt = new DocumentApprovedEvent(dd.Id);
-                    eventsRepository.AddEvent(evt);
-                }))
+                .MapT(res => 
+                    res.Do(de => eventsRepository.AddEvent(de.Event)))
                 .Match(
                     None: NotFound,
                     Some: doc => doc.Match<IActionResult>(
