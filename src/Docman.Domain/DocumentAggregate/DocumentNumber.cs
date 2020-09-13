@@ -1,14 +1,18 @@
+using System.Runtime.Serialization;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
 {
     public class DocumentNumber : NewType<DocumentNumber, string>
     {
-        //TODO make this constructor private
-        public DocumentNumber(string value) : base(value)
+        private DocumentNumber(string value) : base(value)
         {
         }
-        
+
+        public DocumentNumber(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+
         public override string ToString() => Value;
         
         public static implicit operator DocumentNumber(string str) => New(str);
