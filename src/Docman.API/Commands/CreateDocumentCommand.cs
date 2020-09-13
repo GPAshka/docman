@@ -21,10 +21,5 @@ namespace Docman.API.Commands
 
         public CreateDocumentCommand WithDocumentId(Guid documentId) =>
             new CreateDocumentCommand(documentId, Number, Description);
-
-        public Validation<Error, DocumentCreatedEvent> ToEvent() =>
-            DocumentNumber.Create(Number)
-                .Bind(num => DocumentDescription.Create(Description)
-                    .Map(desc => new DocumentCreatedEvent(DocumentId, num, desc)));
     }
 }
