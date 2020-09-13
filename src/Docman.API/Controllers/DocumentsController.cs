@@ -39,16 +39,20 @@ namespace Docman.API.Controllers
                 command = command.WithDocumentId(Guid.NewGuid());
 
             var eventsRepository = new EventsRepository(new Uri("tcp://admin:changeit@127.0.0.1:1113"));
-            
-            return Success<Error, CreateDocumentCommand>(command)
-                .Bind(cmd => Document.Create(cmd.DocumentId, cmd.DocumentNumber))
-                .Do(res => eventsRepository.AddEvent(res.Event))
-                .Match<IActionResult>(
-                    Succ: res => Created(res.Document.Id.ToString(), null), 
-                    Fail: errors => BadRequest(string.Join(",", errors)));
 
-            // TODO save and publish event
-            //return CreatedAtAction(nameof(GetDocument), new {documentId = command.DocumentId}, newState);
+            return command.ToEvent()
+                .Map(evt => (evt.CreateDocument(), evt))
+                .Do(res => eventsRepository.AddEvent(res.evt))
+                .Match<IActionResult>(
+                    Succ: res => Created(res.Item1.Id.ToString(), null),
+                    Fail: errors => BadRequest(string.Join(",", errors)));;
+            
+            /*return Success<Error, CreateDocumentCommand>(command)
+                .Bind(cmd => Document.Create(cmd.DocumentId, cmd.Number, cmd.Description))
+                .Do(res => eventsRepository.AddEvent(res.Event)) //TODO publish event
+                .Match<IActionResult>(
+                    Succ: res => Created(res.Document.Id.ToString(), null),
+                    Fail: errors => BadRequest(string.Join(",", errors)));*/
         }
 
         [HttpPost]
@@ -60,17 +64,18 @@ namespace Docman.API.Controllers
             
             var eventsRepository = new EventsRepository(new Uri("tcp://admin:changeit@127.0.0.1:1113"));
 
-            return await eventsRepository.ReadEvents(command.DocumentId)
-                .Map(DocumentStates.From)
-                .MapT(d => d.Approve())
-                .MapT(res => 
-                    res.Do(de => eventsRepository.AddEvent(de.Event)))
-                .Match(
-                    None: NotFound,
-                    Some: doc => doc.Match<IActionResult>(
-                        Succ: _ => Ok(),
-                        Fail: errors => BadRequest(string.Join(",", errors))
-                    ));
+            Task<Validation<Error, Document>> GetDocument(Guid id) =>
+                eventsRepository.ReadEvents(id)
+                    .Map(DocumentStates.From)
+                    .Map(opt => opt.ToValidation(new Error($"No document with Id {command.DocumentId} was found")));
+
+            return await GetDocument(command.DocumentId)
+                .BindT(d => d.Approve())
+                .Map(val =>
+                    val.Do(res => eventsRepository.AddEvent(res.Event)))
+                .Map(val => val.Match<IActionResult>(
+                    Succ: res => Ok(),
+                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
     }
 }

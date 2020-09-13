@@ -9,7 +9,7 @@ namespace Docman.Domain
     public static class DocumentStates
     {
         public static Document CreateDocument(this DocumentCreatedEvent evt) 
-            => new Document(evt.EntityId, evt.Number);
+            => new Document(evt.EntityId, evt.Number, evt.Description);
 
         public static Document Apply(this Document document, Event evt)
         {
