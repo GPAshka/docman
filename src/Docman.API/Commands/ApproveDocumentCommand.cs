@@ -4,6 +4,6 @@ namespace Docman.API.Commands
 {
     public class ApproveDocumentCommand
     {
-        public Guid DocumentId { get; set; }
+        public Guid Id { get; set; }
     }
 }

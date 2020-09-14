@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Docman.Domain;
 using Docman.Domain.Events;
+using Docman.Infrastructure.EventDto;
 using EventStore.ClientAPI;
+using LanguageExt;
 using Newtonsoft.Json;
 
 namespace Docman.Infrastructure.EventStore
@@ -18,15 +21,15 @@ namespace Docman.Infrastructure.EventStore
             _connectionString = connectionString;
         }
 
-        public async Task AddEvent(Event @event)
+        public async Task AddEvent(string entityId, object @event)
         {
             using var connection = await CreateAndOpenConnection();
-            await connection.AppendToStreamAsync(@event.EntityId.ToString(), ExpectedVersion.Any, Map(@event));
+            await connection.AppendToStreamAsync(entityId, ExpectedVersion.Any, Map(@event));
         }
 
-        public async Task<IEnumerable<Event>> ReadEvents(Guid entityId)
+        public async Task<Validation<Error, IEnumerable<Event>>> ReadEvents(Guid entityId)
         {
-            var events = new List<Event>();
+            var events = new List<Validation<Error, Event>>();
 
             StreamEventsSlice currentSlice;
             long nextSliceStart = StreamPosition.Start;
@@ -42,7 +45,7 @@ namespace Docman.Infrastructure.EventStore
                 events.AddRange(currentSlice.Events.Select(Map));
             } while (!currentSlice.IsEndOfStream);
 
-            return events;
+            return events.Traverse(x => x);
         }
 
         private async Task<IEventStoreConnection> CreateAndOpenConnection()
@@ -58,7 +61,7 @@ namespace Docman.Infrastructure.EventStore
             return connection;
         }
 
-        private static EventData Map(Event @event)
+        private static EventData Map(object @event)
         {
             var eventType = @event.GetType();
             
@@ -72,16 +75,22 @@ namespace Docman.Infrastructure.EventStore
             return new EventData(Guid.NewGuid(), eventType.Name, true, data, metadata);
         }
 
-        private static Event Map(ResolvedEvent resolvedEvent)
+        private static Validation<Error, Event> Map(ResolvedEvent resolvedEvent)
         {
             var meta = JsonConvert.DeserializeObject<EventMetaData>(
                 Encoding.UTF8.GetString(resolvedEvent.Event.Metadata));
             var eventType = Type.GetType(meta.EventType);
-            
-            // TODO if (eventType == null)
 
-            var @event = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(resolvedEvent.Event.Data), eventType);
-            return (Event) @event;
+            if (eventType == null)
+                return new Error($"Unknown event type: {meta.EventType}");
+
+            var eventDto = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(resolvedEvent.Event.Data), eventType);
+            return eventDto switch
+            {
+                DocumentCreatedEventDto createdEventDto => createdEventDto.ToEvent(),
+                DocumentApprovedEventDto approvedEventDto => approvedEventDto.ToEvent(),
+                _ => new Error($"Unknown event DTO type: {eventType}")
+            };
         }
     }
 }

@@ -1,25 +1,20 @@
 using System;
-using Docman.Domain;
-using Docman.Domain.DocumentAggregate;
-using Docman.Domain.Events;
-using LanguageExt;
 
 namespace Docman.API.Commands
 {
     public class CreateDocumentCommand
     {
-        public Guid DocumentId { get; }
+        public Guid Id { get; }
         public string Number { get; }
         public string Description { get; }
 
-        public CreateDocumentCommand(Guid documentId, string number, string description)
+        public CreateDocumentCommand(Guid id, string number, string description)
         {
-            DocumentId = documentId;
+            Id = id;
             Number = number;
             Description = description;
         }
 
-        public CreateDocumentCommand WithDocumentId(Guid documentId) =>
-            new CreateDocumentCommand(documentId, Number, Description);
+        public CreateDocumentCommand WithId(Guid id) => new CreateDocumentCommand(id, Number, Description);
     }
 }
