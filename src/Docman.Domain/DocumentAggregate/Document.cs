@@ -8,10 +8,10 @@ namespace Docman.Domain.DocumentAggregate
     {
         public Guid Id { get; }
         public DocumentNumber Number { get; }
-        public DocumentDescription Description { get; }
+        public Option<DocumentDescription> Description { get; }
         public DocumentStatus Status { get; }
 
-        internal Document(Guid id, DocumentNumber number, DocumentDescription description,
+        public Document(Guid id, DocumentNumber number, Option<DocumentDescription> description,
             DocumentStatus status = DocumentStatus.Created)
         {
             Id = id;

@@ -1,11 +1,12 @@
 using System;
 using Docman.Domain.DocumentAggregate;
+using LanguageExt;
 
 namespace Docman.Domain.Events
 {
     public class DocumentCreatedEvent : Event
     {
-        public DocumentCreatedEvent(Guid entityId, DocumentNumber number, DocumentDescription description) :
+        public DocumentCreatedEvent(Guid entityId, DocumentNumber number, Option<DocumentDescription> description) :
             base(entityId)
         {
             Number = number;
@@ -13,6 +14,6 @@ namespace Docman.Domain.Events
         }
 
         public DocumentNumber Number { get; }
-        public DocumentDescription Description { get; }
+        public Option<DocumentDescription> Description { get; }
     }
 }

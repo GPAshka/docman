@@ -15,12 +15,14 @@ namespace Docman.Domain.DocumentAggregate
         
         public static implicit operator DocumentDescription(string str) => New(str);
         
-        public static Validation<Error, DocumentDescription> Create(string value)
+        public static Validation<Error, Option<DocumentDescription>> Create(string value)
         {
             if (string.IsNullOrEmpty(value))
-                return new Error("Document description should not be empty");
+                return Option<DocumentDescription>.None;
 
-            return new DocumentDescription(value);
+            return value.Length >= 100
+                ? new Error("Document description should not be larger than 100")
+                : Validation<Error, Option<DocumentDescription>>.Success(Option<DocumentDescription>.Some(value));
         }
     }
 }

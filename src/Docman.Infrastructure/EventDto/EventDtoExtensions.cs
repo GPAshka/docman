@@ -13,7 +13,7 @@ namespace Docman.Infrastructure.EventDto
             {
                 Id = @event.EntityId.ToString(),
                 Number = @event.Number.Value,
-                Description = @event.Description.Value,
+                Description = @event.Description.Match(Some: d => d.Value, None: string.Empty),
                 TimeStamp = @event.TimeStamp
             };
 
