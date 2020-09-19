@@ -21,7 +21,18 @@ namespace Docman.Infrastructure.EventStore
             _connectionString = connectionString;
         }
 
-        public async Task AddEvent(string entityId, object @event)
+        public async Task AddEvent(Event @event)
+        {
+            object eventDto = @event switch
+            {
+                DocumentCreatedEvent createdEvent => createdEvent.ToDto(),
+                DocumentApprovedEvent approvedEvent => approvedEvent.ToDto()
+            };
+
+            await AddEvent(@event.EntityId.ToString(), eventDto);
+        }
+
+        private async Task AddEvent(string entityId, object @event)
         {
             using var connection = await CreateAndOpenConnection();
             await connection.AppendToStreamAsync(entityId, ExpectedVersion.Any, Map(@event));

@@ -5,7 +5,6 @@ using Docman.API.Extensions;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
-using Docman.Infrastructure.EventDto;
 using Docman.Infrastructure.EventStore;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
@@ -41,8 +40,7 @@ namespace Docman.API.Controllers
 
             void SaveAndPublish(DocumentCreatedEvent evt)
             {
-                var eventDto = evt.ToDto();
-                eventsRepository.AddEvent(eventDto.Id, eventDto);
+                eventsRepository.AddEvent(evt);
             }
 
             if (command.Id == Guid.Empty)
@@ -69,10 +67,9 @@ namespace Docman.API.Controllers
                     .BindT(e => DocumentStates.From(e)
                         .ToValidation(new Error($"No document with Id {id} was found")));
 
-            void SaveAndPublish(DocumentApprovedEvent evt)
+            void SaveAndPublish(Event evt)
             {
-                var eventDto = evt.ToDto();
-                eventsRepository.AddEvent(eventDto.Id, eventDto);
+                eventsRepository.AddEvent(evt);
             }
 
             return await getDocument(command.Id)
