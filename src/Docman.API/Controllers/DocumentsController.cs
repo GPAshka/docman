@@ -73,7 +73,7 @@ namespace Docman.API.Controllers
             }
 
             return await getDocument(command.Id)
-                .BindT(d => d.Approve())
+                .BindT(d => d.Approve(command.Comment))
                 .Do(val => 
                     val.Do(res => SaveAndPublish(res.Event)))
                 .Map(val => val.Match<IActionResult>(

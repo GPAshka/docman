@@ -15,7 +15,8 @@ namespace Docman.Domain
         {
             return evt switch
             {
-                DocumentApprovedEvent _ => document.WithStatus(DocumentStatus.Approved)
+                DocumentApprovedEvent approvedEvent => new ApprovedDocument(document.Id, document.Number,
+                    document.Description, approvedEvent.Comment)
             };
         }
 

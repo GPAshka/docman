@@ -20,17 +20,14 @@ namespace Docman.Domain.DocumentAggregate
             Status = status;
         }
 
-        public Document WithStatus(DocumentStatus status) => new Document(Id, Number, Description, status);
-
-        public Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve()
+        public Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(string comment)
         {
             if (Status != DocumentStatus.Created)
                 return new Error("Document should have Created status");
-            
-            var evt = new DocumentApprovedEvent(Id);
-            var newState = this.Apply(evt);
 
-            return (newState, evt);
+            return Comment.Create(comment)
+                .Map(c => new DocumentApprovedEvent(Id, c))
+                .Map(evt => (this.Apply(evt), evt));
         }
     }
 }

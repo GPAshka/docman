@@ -21,6 +21,7 @@ namespace Docman.Infrastructure.EventDto
             new DocumentApprovedEventDto
             {
                 Id = @event.EntityId.ToString(),
+                Comment = @event.Comment.Value,
                 TimeStamp = @event.TimeStamp
             };
 
@@ -30,6 +31,8 @@ namespace Docman.Infrastructure.EventDto
                     .Map(desc => (Event) new DocumentCreatedEvent(Guid.Parse(dto.Id), num, desc)));
 
         public static Validation<Error, Event> ToEvent(this DocumentApprovedEventDto dto) =>
-            new DocumentApprovedEvent(Guid.Parse(dto.Id));
+            Comment.Create(dto.Comment)
+                .Map(c => (Event) new DocumentApprovedEvent(Guid.Parse(dto.Id), c));
+
     }
 }
