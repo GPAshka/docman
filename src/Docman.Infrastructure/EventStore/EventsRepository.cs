@@ -12,54 +12,44 @@ using Newtonsoft.Json;
 
 namespace Docman.Infrastructure.EventStore
 {
-    public class EventsRepository
+    public static class EventsRepository
     {
-        private readonly Uri _connectionString;
-
-        public EventsRepository(Uri connectionString)
-        {
-            _connectionString = connectionString;
-        }
-
-        public async Task AddEvent(Event @event)
-        {
-            object eventDto = @event switch
+        public static Action<string, Event> AddEvent =>
+            async (connectionString, @event) =>
             {
-                DocumentCreatedEvent createdEvent => createdEvent.ToDto(),
-                DocumentApprovedEvent approvedEvent => approvedEvent.ToDto()
+                object eventDto = @event switch
+                {
+                    DocumentCreatedEvent createdEvent => createdEvent.ToDto(),
+                    DocumentApprovedEvent approvedEvent => approvedEvent.ToDto()
+                };
+
+                using var connection = await CreateAndOpenConnection(connectionString);
+                await connection.AppendToStreamAsync(@event.EntityId.ToString(), ExpectedVersion.Any, Map(eventDto));
             };
 
-            await AddEvent(@event.EntityId.ToString(), eventDto);
-        }
-
-        private async Task AddEvent(string entityId, object @event)
-        {
-            using var connection = await CreateAndOpenConnection();
-            await connection.AppendToStreamAsync(entityId, ExpectedVersion.Any, Map(@event));
-        }
-
-        public async Task<Validation<Error, IEnumerable<Event>>> ReadEvents(Guid entityId)
-        {
-            var events = new List<Validation<Error, Event>>();
-
-            StreamEventsSlice currentSlice;
-            long nextSliceStart = StreamPosition.Start;
-            
-            using var connection = await CreateAndOpenConnection();
-            
-            do
+        public static Func<string, Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents =>
+            async (connectionString, entityId) =>
             {
-                currentSlice =
-                    await connection.ReadStreamEventsForwardAsync(entityId.ToString(), nextSliceStart, 200, false);
-                nextSliceStart = currentSlice.NextEventNumber;
+                var events = new List<Validation<Error, Event>>();
 
-                events.AddRange(currentSlice.Events.Select(Map));
-            } while (!currentSlice.IsEndOfStream);
+                StreamEventsSlice currentSlice;
+                long nextSliceStart = StreamPosition.Start;
 
-            return events.Traverse(x => x);
-        }
+                using var connection = await CreateAndOpenConnection(connectionString);
 
-        private async Task<IEventStoreConnection> CreateAndOpenConnection()
+                do
+                {
+                    currentSlice =
+                        await connection.ReadStreamEventsForwardAsync(entityId.ToString(), nextSliceStart, 200, false);
+                    nextSliceStart = currentSlice.NextEventNumber;
+
+                    events.AddRange(currentSlice.Events.Select(Map));
+                } while (!currentSlice.IsEndOfStream);
+
+                return events.Traverse(x => x);
+            };
+
+        private static async Task<IEventStoreConnection> CreateAndOpenConnection(string connectionString)
         {
             var settings = ConnectionSettings.Create()
                 .EnableVerboseLogging()
@@ -67,7 +57,8 @@ namespace Docman.Infrastructure.EventStore
                 .DisableTls()
                 .Build();
 
-            var connection = EventStoreConnection.Create(settings, _connectionString);
+            var connectionStringUri = new Uri(connectionString);
+            var connection = EventStoreConnection.Create(settings, connectionStringUri);
             await connection.ConnectAsync();
             return connection;
         }

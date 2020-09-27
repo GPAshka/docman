@@ -1,15 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Docman.API.Commands;
 using Docman.API.Extensions;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
-using Docman.Infrastructure.EventStore;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Docman.API.Controllers
 {
@@ -17,17 +16,25 @@ namespace Docman.API.Controllers
     [Route("[controller]")]
     public class DocumentsController : ControllerBase
     {
-        private readonly ILogger<DocumentsController> _logger;
+        private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
+        private readonly Action<Event> SaveAndPublish;
 
-        public DocumentsController(ILogger<DocumentsController> logger)
+        private Func<Guid, Task<Validation<Error, Document>>> GetDocument => id =>
+            ReadEvents(id)
+                .BindT(e => DocumentStates.From(e)
+                    .ToValidation(new Error($"No document with Id '{id}' was found")));
+        
+        public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
+            Action<Event> saveAndPublish)
         {
-            _logger = logger;
+            SaveAndPublish = saveAndPublish;
+            ReadEvents = readEvents;
         }
 
         [HttpGet]
         [Route("{documentId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetDocument(Guid documentId)
+        public IActionResult Get(Guid documentId)
         {
             return Ok();
         }
@@ -36,13 +43,6 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public IActionResult CreateDocument([FromBody] CreateDocumentCommand command)
         {
-            var eventsRepository = new EventsRepository(new Uri("tcp://admin:changeit@127.0.0.1:1113"));
-
-            void SaveAndPublish(DocumentCreatedEvent evt)
-            {
-                eventsRepository.AddEvent(evt);
-            }
-
             if (command.Id == Guid.Empty)
                 command = command.WithId(Guid.NewGuid());
 
@@ -58,21 +58,8 @@ namespace Docman.API.Controllers
         public async Task<IActionResult> ApproveDocument([FromBody] ApproveDocumentCommand command)
         {
             //TODO validate request
-            //TODO get document
-            
-            var eventsRepository = new EventsRepository(new Uri("tcp://admin:changeit@127.0.0.1:1113"));
 
-            Task<Validation<Error, Document>> getDocument(Guid id) =>
-                eventsRepository.ReadEvents(id)
-                    .BindT(e => DocumentStates.From(e)
-                        .ToValidation(new Error($"No document with Id {id} was found")));
-
-            void SaveAndPublish(Event evt)
-            {
-                eventsRepository.AddEvent(evt);
-            }
-
-            return await getDocument(command.Id)
+            return await GetDocument(command.Id)
                 .BindT(d => d.Approve(command.Comment))
                 .Do(val => 
                     val.Do(res => SaveAndPublish(res.Event)))

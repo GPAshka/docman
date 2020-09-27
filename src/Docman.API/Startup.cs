@@ -1,5 +1,7 @@
+using Docman.API.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,6 +26,8 @@ namespace Docman.API
                 {
                     options.SerializerSettings.Converters.Add(new StringEnumConverter());
                 });
+
+            services.AddSingleton<IControllerActivator>(new DocumentsControllerActivator(Configuration));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
