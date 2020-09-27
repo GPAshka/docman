@@ -41,6 +41,7 @@ namespace Docman.API.Controllers
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult CreateDocument([FromBody] CreateDocumentCommand command)
         {
             if (command.Id == Guid.Empty)
@@ -54,6 +55,8 @@ namespace Docman.API.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Route("approve")]
         public async Task<IActionResult> ApproveDocument([FromBody] ApproveDocumentCommand command)
         {
@@ -64,7 +67,7 @@ namespace Docman.API.Controllers
                 .Do(val => 
                     val.Do(res => SaveAndPublish(res.Event)))
                 .Map(val => val.Match<IActionResult>(
-                    Succ: res => Ok(),
+                    Succ: res => NoContent(),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
     }

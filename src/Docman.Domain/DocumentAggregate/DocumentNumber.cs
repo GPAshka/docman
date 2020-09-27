@@ -9,10 +9,6 @@ namespace Docman.Domain.DocumentAggregate
         {
         }
 
-        public DocumentNumber(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-
         public override string ToString() => Value;
         
         public static implicit operator DocumentNumber(string str) => New(str);

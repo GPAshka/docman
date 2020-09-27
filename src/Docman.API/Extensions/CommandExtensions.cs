@@ -8,9 +8,9 @@ namespace Docman.API.Extensions
 {
     public static class CommandExtensions
     {
-        public static Validation<Error, DocumentCreatedEvent> ToEvent(this CreateDocumentCommand command) =>
+        public static Validation<Error, Event> ToEvent(this CreateDocumentCommand command) =>
             DocumentNumber.Create(command.Number)
                 .Bind(num => DocumentDescription.Create(command.Description)
-                    .Map(desc => new DocumentCreatedEvent(command.Id, num, desc)));
+                    .Map(desc => (Event) new DocumentCreatedEvent(command.Id, num, desc)));
     }
 }
