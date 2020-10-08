@@ -28,5 +28,12 @@ namespace Docman.Domain
                         seed: CreateDocument((DocumentCreatedEvent) createdEvent),
                         func: (state, evt) => state.Apply(evt)
                     )));
+
+        public static DocumentStatus GetStatus(this Event @event)
+            => @event switch
+            {
+                DocumentCreatedEvent _ => DocumentStatus.Created,
+                DocumentApprovedEvent _ => DocumentStatus.Approved
+            };
     }
 }

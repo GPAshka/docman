@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Docman.API.Commands;
 using Docman.API.Extensions;
+using Docman.API.Responses;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
@@ -37,6 +39,19 @@ namespace Docman.API.Controllers
         public IActionResult Get(Guid documentId)
         {
             return Ok();
+        }
+        
+        [HttpGet]
+        [Route("{documentId:guid}/history")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DocumentHistory>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public Task<IActionResult> GetDocumentHistory(Guid documentId)
+        {
+            return ReadEvents(documentId)
+                .MapT(e => e.Select(DocumentHistory.EventToDocumentHistory))
+                .Map(val => val.Match<IActionResult>(
+                    Succ: Ok,
+                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
 
         [HttpPost]
