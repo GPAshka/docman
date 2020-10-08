@@ -13,6 +13,14 @@ namespace Docman.Domain.Events
             Description = description;
         }
 
+        public DocumentCreatedEvent(Guid entityId, DocumentNumber number, Option<DocumentDescription> description,
+            DateTime timeStamp) :
+            base(entityId, timeStamp)
+        {
+            Number = number;
+            Description = description;
+        }
+
         public DocumentNumber Number { get; }
         public Option<DocumentDescription> Description { get; }
     }

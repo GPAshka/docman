@@ -10,6 +10,11 @@ namespace Docman.Domain.Events
             Comment = comment;
         }
 
+        public DocumentApprovedEvent(Guid entityId, Comment comment, DateTime timeStamp) : base(entityId, timeStamp)
+        {
+            Comment = comment;
+        }
+
         public Comment Comment { get; }
     }
 }

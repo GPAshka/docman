@@ -28,11 +28,11 @@ namespace Docman.Infrastructure.EventDto
         public static Validation<Error, Event> ToEvent(this DocumentCreatedEventDto dto) =>
             DocumentNumber.Create(dto.Number)
                 .Bind(num => DocumentDescription.Create(dto.Description)
-                    .Map(desc => (Event) new DocumentCreatedEvent(Guid.Parse(dto.Id), num, desc)));
+                    .Map(desc => (Event) new DocumentCreatedEvent(Guid.Parse(dto.Id), num, desc, dto.TimeStamp)));
 
         public static Validation<Error, Event> ToEvent(this DocumentApprovedEventDto dto) =>
             Comment.Create(dto.Comment)
-                .Map(c => (Event) new DocumentApprovedEvent(Guid.Parse(dto.Id), c));
+                .Map(c => (Event) new DocumentApprovedEvent(Guid.Parse(dto.Id), c, dto.TimeStamp));
 
     }
 }
