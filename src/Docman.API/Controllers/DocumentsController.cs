@@ -45,9 +45,9 @@ namespace Docman.API.Controllers
         [Route("{documentId:guid}/history")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DocumentHistory>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public Task<IActionResult> GetDocumentHistory(Guid documentId)
+        public async Task<IActionResult> GetDocumentHistory(Guid documentId)
         {
-            return ReadEvents(documentId)
+            return await ReadEvents(documentId)
                 .MapT(e => e.Select(DocumentHistory.EventToDocumentHistory))
                 .Map(val => val.Match<IActionResult>(
                     Succ: Ok,

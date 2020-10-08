@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Docman.API.Commands;
 using Docman.API.Controllers;
 using Docman.API.Extensions;
+using Docman.API.Responses;
 using Docman.Domain;
 using Docman.Domain.Events;
 using LanguageExt;
@@ -24,6 +26,40 @@ namespace Docman.UnitTests.Controllers
 
         private static Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEventsFuncWithError(string error) =>
             id => Task.FromResult(Validation<Error, IEnumerable<Event>>.Fail(new Seq<Error> { new Error(error) }));
+
+        [Fact]
+        public async Task TestGetDocumentHistoryOkResult()
+        {
+            //Arrange
+            _documentsController = new DocumentsController(ValidReadEventsFunc, SaveAndPublish);
+            
+            //Act
+            var actionResult = await _documentsController.GetDocumentHistory(Guid.Empty);
+            
+            //Assert
+            var okResult = actionResult as OkObjectResult;
+            var documentHistory = okResult?.Value as IEnumerable<DocumentHistory>;
+            
+            Assert.NotNull(okResult);
+            Assert.NotNull(documentHistory);
+            Assert.Single(documentHistory);
+        }
+        
+        [Fact]
+        public async Task TestGetDocumentHistoryBadRequestResult()
+        {
+            //Arrange
+            const string error = "testError";
+            _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish);
+            
+            //Act
+            var actionResult = await _documentsController.GetDocumentHistory(Guid.Empty);
+            
+            //Assert
+            var badRequestResult = actionResult as BadRequestObjectResult; 
+            Assert.NotNull(badRequestResult);
+            Assert.NotNull(badRequestResult.Value);
+        }
         
         [Fact]
         public void TestCreateDocumentCreatedResult()
