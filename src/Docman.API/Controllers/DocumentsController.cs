@@ -80,12 +80,12 @@ namespace Docman.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Route("approve")]
-        public async Task<IActionResult> ApproveDocument([FromBody] ApproveDocumentCommand command)
+        [Route("{id:guid}/approve")]
+        public async Task<IActionResult> ApproveDocument(Guid id, [FromBody] ApproveDocumentCommand command)
         {
             //TODO validate request
 
-            return await GetDocument(command.Id)
+            return await GetDocument(id)
                 .BindT(d => d.Approve(command.Comment))
                 .Do(val => 
                     val.Do(res => SaveAndPublish(res.Event)))
