@@ -97,12 +97,12 @@ namespace Docman.UnitTests.Controllers
         public async Task TestApproveDocumentNoContentResult()
         {
             //Arrange
-            var command = new ApproveDocumentCommand(Guid.Empty, "approve");
+            var command = new ApproveDocumentCommand("approve");
             
             _documentsController = new DocumentsController(ValidReadEventsFunc, SaveAndPublish);
             
             //Act
-            var result = await _documentsController.ApproveDocument(command);
+            var result = await _documentsController.ApproveDocument(Guid.Empty, command);
             
             //Assert
             var noContentResult = result as NoContentResult; 
@@ -113,13 +113,13 @@ namespace Docman.UnitTests.Controllers
         public async Task TestApproveDocumentReadEventsErrorBadRequestResult()
         {
             //Arrange
-            var command = new ApproveDocumentCommand(Guid.Empty, "approve");
+            var command = new ApproveDocumentCommand("approve");
             const string error = "testError";
 
             _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish);
             
             //Act
-            var result = await _documentsController.ApproveDocument(command);
+            var result = await _documentsController.ApproveDocument(Guid.Empty, command);
             
             //Assert
             var badRequestResult = result as BadRequestObjectResult; 
@@ -131,12 +131,12 @@ namespace Docman.UnitTests.Controllers
         public async Task TestApproveDocumentInvalidCommandBadRequestResult()
         {
             //Arrange
-            var command = new ApproveDocumentCommand(Guid.Empty, null);
+            var command = new ApproveDocumentCommand(null);
 
             _documentsController = new DocumentsController(ValidReadEventsFunc, SaveAndPublish);
             
             //Act
-            var result = await _documentsController.ApproveDocument(command);
+            var result = await _documentsController.ApproveDocument(Guid.Empty, command);
             
             //Assert
             var badRequestResult = result as BadRequestObjectResult; 
