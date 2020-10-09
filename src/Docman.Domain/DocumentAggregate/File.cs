@@ -16,10 +16,10 @@ namespace Docman.Domain.DocumentAggregate
             Description = description;
         }
 
-        public static Validation<Error, File> Create(string id, string name, string description) =>
+        public static Validation<Error, File> Create(Guid id, string name, string description) =>
             FileName.Create(name)
                 .Bind(n => FileDescription.Create(description)
-                    .Map(desc => new File(Guid.Parse(id), n, desc)));
+                    .Map(desc => new File(id, n, desc)));
 
     }
 }

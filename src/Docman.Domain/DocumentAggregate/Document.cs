@@ -14,22 +14,45 @@ namespace Docman.Domain.DocumentAggregate
         public DocumentStatus Status { get; }
 
         public Document(Guid id, DocumentNumber number, Option<DocumentDescription> description,
-            DocumentStatus status)
+            DocumentStatus status, IEnumerable<File> files)
         {
             Id = id;
             Number = number;
             Description = description;
             Status = status;
-            Files = new List<File>();
+            Files = files;
+        }
+        
+        public Document(Guid id, DocumentNumber number, Option<DocumentDescription> description,
+            DocumentStatus status) : this(id, number, description, status, new List<File>())
+        {
         }
 
+        public Document WithFile(Guid id, FileName name, Option<FileDescription> description)
+        {
+            var file = new File(id, name, description);
+            var newFiles = new List<File>(Files) { file };
+            return new Document(Id, Number, Description, Status, newFiles);
+        }
+        
         public Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(string comment)
         {
             if (Status != DocumentStatus.Draft)
-                return new Error("Document should have Created status");
+                return new Error($"Document should have {DocumentStatus.Draft} status");
 
             return Comment.Create(comment)
                 .Map(c => new DocumentApprovedEvent(Id, c))
+                .Map(evt => (this.Apply(evt), evt));
+        }
+
+        public Validation<Error, (Document Document, FileAddedEvent Event)> AddFile(string fileName,
+            string fileDescription)
+        {
+            if (Status != DocumentStatus.Draft)
+                return new Error($"Document should have {DocumentStatus.Draft} status");
+
+            return File.Create(Guid.NewGuid(), fileName, fileDescription)
+                .Map(file => new FileAddedEvent(Id, file.Id, file.Name, file.Description))
                 .Map(evt => (this.Apply(evt), evt));
         }
     }

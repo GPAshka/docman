@@ -16,7 +16,9 @@ namespace Docman.Domain
             return evt switch
             {
                 DocumentApprovedEvent approvedEvent => new ApprovedDocument(document.Id, document.Number,
-                    document.Description, approvedEvent.Comment)
+                    document.Description, approvedEvent.Comment),
+                FileAddedEvent fileAddedEvent => document.WithFile(fileAddedEvent.FileId, fileAddedEvent.Name,
+                    fileAddedEvent.Description)
             };
         }
 

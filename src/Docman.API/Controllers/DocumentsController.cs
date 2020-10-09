@@ -42,6 +42,14 @@ namespace Docman.API.Controllers
         }
         
         [HttpGet]
+        [Route("{documentId:guid}/files/{fileId:guid}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetFile(Guid documentId, Guid fileId)
+        {
+            return Ok();
+        }
+        
+        [HttpGet]
         [Route("{documentId:guid}/history")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DocumentHistory>))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -83,6 +91,21 @@ namespace Docman.API.Controllers
                     val.Do(res => SaveAndPublish(res.Event)))
                 .Map(val => val.Match<IActionResult>(
                     Succ: res => NoContent(),
+                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Route("{id:guid}/files")]
+        public async Task<IActionResult> AddFile(Guid id, [FromBody] AddFileCommand command)
+        {
+            return await GetDocument(id)
+                .BindT(d => d.AddFile(command.FileName, command.FileDescription))
+                .Do(val =>
+                    val.Do(res => SaveAndPublish(res.Event)))
+                .Map(val => val.Match<IActionResult>(
+                    Succ: res => Created($"documents/{id}/{res.Event?.FileId.ToString()}", null),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
     }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Docman.API.Commands;
 using Docman.API.Controllers;
@@ -138,6 +137,61 @@ namespace Docman.UnitTests.Controllers
             
             //Act
             var result = await _documentsController.ApproveDocument(command);
+            
+            //Assert
+            var badRequestResult = result as BadRequestObjectResult; 
+            Assert.NotNull(badRequestResult);
+            Assert.NotNull(badRequestResult.Value);
+        }
+        
+        [Fact]
+        public async Task TestAddFileCreatedResult()
+        {
+            //Arrange
+            var documentId = Guid.NewGuid();
+            var command = new AddFileCommand("test", "description");
+            
+            _documentsController = new DocumentsController(ValidReadEventsFunc, SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.AddFile(documentId, command);
+            
+            //Assert
+            var createdResult = result as CreatedResult; 
+            Assert.NotNull(createdResult);
+            Assert.NotNull(createdResult.Location);
+        }
+        
+        [Fact]
+        public async Task TestAddFileReadEventsErrorBadRequestResult()
+        {
+            //Arrange
+            const string error = "testError";
+            var documentId = Guid.NewGuid();
+            var command = new AddFileCommand("test", "description");
+
+            _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.AddFile(documentId, command);
+            
+            //Assert
+            var badRequestResult = result as BadRequestObjectResult; 
+            Assert.NotNull(badRequestResult);
+            Assert.NotNull(badRequestResult.Value);
+        }
+        
+        [Fact]
+        public async Task TestAddFileInvalidCommandBadRequestResult()
+        {
+            //Arrange
+            var documentId = Guid.NewGuid();
+            var command = new AddFileCommand(null, "test");
+
+            _documentsController = new DocumentsController(ValidReadEventsFunc, SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.AddFile(documentId, command);
             
             //Assert
             var badRequestResult = result as BadRequestObjectResult; 
