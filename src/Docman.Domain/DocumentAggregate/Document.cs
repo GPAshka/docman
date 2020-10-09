@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Docman.Domain.Events;
 using LanguageExt;
 
@@ -9,6 +10,7 @@ namespace Docman.Domain.DocumentAggregate
         public Guid Id { get; }
         public DocumentNumber Number { get; }
         public Option<DocumentDescription> Description { get; }
+        public IEnumerable<File> Files { get; }
         public DocumentStatus Status { get; }
 
         public Document(Guid id, DocumentNumber number, Option<DocumentDescription> description,
