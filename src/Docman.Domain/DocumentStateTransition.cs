@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
@@ -6,7 +7,7 @@ using static LanguageExt.Prelude;
 
 namespace Docman.Domain
 {
-    public static class DocumentStates
+    public static class DocumentStateTransition
     {
         public static Document CreateDocument(this DocumentCreatedEvent evt) 
             => new Document(evt.EntityId, evt.Number, evt.Description, DocumentStatus.Draft);
@@ -15,8 +16,7 @@ namespace Docman.Domain
         {
             return evt switch
             {
-                DocumentApprovedEvent approvedEvent => new ApprovedDocument(document.Id, document.Number,
-                    document.Description, approvedEvent.Comment),
+                DocumentApprovedEvent approvedEvent => document.Approve(approvedEvent.Comment),
                 FileAddedEvent fileAddedEvent => document.WithFile(fileAddedEvent.FileId, fileAddedEvent.Name,
                     fileAddedEvent.Description)
             };
@@ -30,6 +30,28 @@ namespace Docman.Domain
                         seed: CreateDocument((DocumentCreatedEvent) createdEvent),
                         func: (state, evt) => state.Apply(evt)
                     )));
+
+        public static Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(
+            this Document document, string comment)
+        {
+            if (document.Status != DocumentStatus.Draft)
+                return new Error($"Document should have {DocumentStatus.Draft} status");
+
+            return Comment.Create(comment)
+                .Map(c => new DocumentApprovedEvent(document.Id, c))
+                .Map(evt => (document.Apply(evt), evt));
+        }
+
+        public static Validation<Error, (Document Document, FileAddedEvent Event)> AddFile(this Document document,
+            string fileName, string fileDescription)
+        {
+            if (document.Status != DocumentStatus.Draft)
+                return new Error($"Document should have {DocumentStatus.Draft} status");
+
+            return File.Create(Guid.NewGuid(), fileName, fileDescription)
+                .Map(file => new FileAddedEvent(document.Id, file.Id, file.Name, file.Description, DateTime.UtcNow))
+                .Map(evt => (document.Apply(evt), evt));
+        }
 
         public static DocumentStatus GetStatus(this Event @event)
             => @event switch

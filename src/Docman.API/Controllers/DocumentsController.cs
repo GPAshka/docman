@@ -23,7 +23,7 @@ namespace Docman.API.Controllers
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocument => id =>
             ReadEvents(id)
-                .BindT(e => DocumentStates.From(e)
+                .BindT(e => DocumentStateTransition.From(e)
                     .ToValidation(new Error($"No document with Id '{id}' was found")));
         
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
@@ -77,7 +77,7 @@ namespace Docman.API.Controllers
                     Fail: errors => BadRequest(string.Join(",", errors)));
         }
 
-        [HttpPost]
+        [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Route("{id:guid}/approve")]
@@ -92,6 +92,15 @@ namespace Docman.API.Controllers
                 .Map(val => val.Match<IActionResult>(
                     Succ: res => NoContent(),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+        }
+
+        [HttpPut]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Route("{id:guid}/send-for-approval")]
+        public async Task<IActionResult> SendDocumentForApproval(Guid id)
+        {
+            return null;
         }
 
         [HttpPost]
