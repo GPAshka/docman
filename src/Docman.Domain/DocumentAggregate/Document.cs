@@ -14,17 +14,18 @@ namespace Docman.Domain.DocumentAggregate
         public DocumentStatus Status { get; }
 
         public Document(Guid id, DocumentNumber number, Option<DocumentDescription> description,
-            DocumentStatus status = DocumentStatus.Created)
+            DocumentStatus status)
         {
             Id = id;
             Number = number;
             Description = description;
             Status = status;
+            Files = new List<File>();
         }
 
         public Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(string comment)
         {
-            if (Status != DocumentStatus.Created)
+            if (Status != DocumentStatus.Draft)
                 return new Error("Document should have Created status");
 
             return Comment.Create(comment)

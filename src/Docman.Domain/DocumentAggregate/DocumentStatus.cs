@@ -2,7 +2,7 @@ namespace Docman.Domain.DocumentAggregate
 {
     public enum DocumentStatus
     {
-        Created,
+        Draft,
         Approved,
         Rejected
     }

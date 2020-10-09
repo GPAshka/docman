@@ -9,7 +9,7 @@ namespace Docman.Domain
     public static class DocumentStates
     {
         public static Document CreateDocument(this DocumentCreatedEvent evt) 
-            => new Document(evt.EntityId, evt.Number, evt.Description);
+            => new Document(evt.EntityId, evt.Number, evt.Description, DocumentStatus.Draft);
 
         public static Document Apply(this Document document, Event evt)
         {
@@ -32,7 +32,7 @@ namespace Docman.Domain
         public static DocumentStatus GetStatus(this Event @event)
             => @event switch
             {
-                DocumentCreatedEvent _ => DocumentStatus.Created,
+                DocumentCreatedEvent _ => DocumentStatus.Draft,
                 DocumentApprovedEvent _ => DocumentStatus.Approved
             };
     }
