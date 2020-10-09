@@ -105,7 +105,7 @@ namespace Docman.API.Controllers
                 .Do(val =>
                     val.Do(res => SaveAndPublish(res.Event)))
                 .Map(val => val.Match<IActionResult>(
-                    Succ: res => Created($"documents/{id}/{res.Event?.FileId.ToString()}", null),
+                    Succ: res => Created($"documents/{id}/files/{res.Event?.FileId.ToString()}", null),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
     }

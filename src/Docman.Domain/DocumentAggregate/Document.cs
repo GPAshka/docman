@@ -52,7 +52,7 @@ namespace Docman.Domain.DocumentAggregate
                 return new Error($"Document should have {DocumentStatus.Draft} status");
 
             return File.Create(Guid.NewGuid(), fileName, fileDescription)
-                .Map(file => new FileAddedEvent(Id, file.Id, file.Name, file.Description))
+                .Map(file => new FileAddedEvent(Id, file.Id, file.Name, file.Description, DateTime.UtcNow))
                 .Map(evt => (this.Apply(evt), evt));
         }
     }
