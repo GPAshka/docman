@@ -1,6 +1,6 @@
 using System;
 
-namespace Docman.Infrastructure.EventDto
+namespace Docman.API.Dto.Events
 {
     public class DocumentApprovedEventDto
     {

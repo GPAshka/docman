@@ -1,10 +1,11 @@
 using System;
+using Docman.API.Dto.Events;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
 using LanguageExt;
 
-namespace Docman.Infrastructure.EventDto
+namespace Docman.API.Extensions
 {
     public static class EventDtoExtensions
     {

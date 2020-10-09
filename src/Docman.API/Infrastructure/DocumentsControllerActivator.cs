@@ -1,5 +1,6 @@
 using System;
 using Docman.API.Controllers;
+using Docman.API.EventStore;
 using Docman.Infrastructure.EventStore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -33,8 +34,8 @@ namespace Docman.API.Infrastructure
         {
             //TODO catch exceptions while reading configuration
             var connectionString = _configuration["EventStoreConnectionString"];
-            var readEvents = par(EventsRepository.ReadEvents, connectionString);
-            var saveEvent = par(EventsRepository.AddEvent, connectionString);
+            var readEvents = par(EventStoreHelper.ReadEvents, connectionString);
+            var saveEvent = par(EventStoreHelper.AddEvent, connectionString);
 
             return new DocumentsController(readEvents, saveEvent);
         }
