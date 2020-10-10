@@ -10,10 +10,10 @@ namespace Docman.Domain
 {
     public static class DocumentStateTransition
     {
-        public static Document CreateDocument(this DocumentCreatedEvent evt) 
+        private static Document CreateDocument(this DocumentCreatedEvent evt) 
             => new Document(evt.EntityId, evt.Number, evt.Description, DocumentStatus.Draft);
 
-        public static Document Apply(this Document document, Event evt)
+        private static Document Apply(this Document document, Event evt)
         {
             return evt switch
             {
@@ -68,12 +68,5 @@ namespace Docman.Domain
                 .Success(new DocumentSentForApprovalEvent(document.Id))
                 .Map(evt => (document.Apply(evt), evt));
         }
-
-        public static DocumentStatus GetStatus(this Event @event)
-            => @event switch
-            {
-                DocumentCreatedEvent _ => DocumentStatus.Draft,
-                DocumentApprovedEvent _ => DocumentStatus.Approved
-            };
     }
 }

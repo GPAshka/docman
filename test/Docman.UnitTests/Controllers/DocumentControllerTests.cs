@@ -48,6 +48,20 @@ namespace Docman.UnitTests.Controllers
         }
         
         [Fact]
+        public async Task TestGetDocumentHistoryNotFoundResult()
+        {
+            //Arrange
+            _documentsController = new DocumentsController(ValidReadEventsFunc(), SaveAndPublish);
+            
+            //Act
+            var actionResult = await _documentsController.GetDocumentHistory(Guid.Empty);
+            
+            //Assert
+            var notFoundResult = actionResult as NotFoundResult;
+            Assert.NotNull(notFoundResult);
+        }
+        
+        [Fact]
         public async Task TestGetDocumentHistoryBadRequestResult()
         {
             //Arrange

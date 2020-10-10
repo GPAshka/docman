@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Docman.API.Commands;
 using Docman.API.Extensions;
@@ -11,6 +10,7 @@ using Docman.Domain.Events;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static LanguageExt.Prelude;
 
 namespace Docman.API.Controllers
 {
@@ -48,7 +48,7 @@ namespace Docman.API.Controllers
         {
             return Ok();
         }
-        
+
         [HttpGet]
         [Route("{documentId:guid}/history")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<DocumentHistory>))]
@@ -56,10 +56,14 @@ namespace Docman.API.Controllers
         public async Task<IActionResult> GetDocumentHistory(Guid documentId)
         {
             return await ReadEvents(documentId)
-                .MapT(e => e.Select(DocumentHistory.EventToDocumentHistory))
+                .MapT(events => events.Match(
+                    Empty: () => None,
+                    More: otherEvents => Some(DocumentHistory.EventsToDocumentHistory(otherEvents))))
                 .Map(val => val.Match<IActionResult>(
-                    Succ: Ok,
-                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+                    Fail: errors => BadRequest(string.Join(",", errors)),
+                    Succ: res => res.Match<IActionResult>(
+                        Some: Ok,
+                        None: NotFound)));
         }
 
         [HttpPost]
