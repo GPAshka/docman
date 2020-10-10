@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
@@ -27,17 +28,36 @@ namespace Docman.Domain.DocumentAggregate
         {
         }
 
-        public Document WithFile(Guid id, FileName name, Option<FileDescription> description)
+        public Validation<Error, Document> AddFile(Guid id, FileName name, Option<FileDescription> description)
         {
+            if (Status != DocumentStatus.Draft)
+                return new Error($"Document should have {DocumentStatus.Draft} status");
+            
+            if (Files.Any(f => f.Name.Equals(name)))
+                return new Error($"Document already has file with name '{name.Value}'");
+            
             var file = new File(id, name, description);
             var newFiles = new List<File>(Files) { file };
             return new Document(Id, Number, Description, Status, newFiles);
         }
 
-        public Document WithStatus(DocumentStatus status) =>
-            new Document(Id, Number, Description, status, Files);
+        public Validation<Error, Document> WaitingForApproval()
+        {
+            if (Status != DocumentStatus.Draft)
+                return new Error($"Document should have {DocumentStatus.Draft} status");
 
-        public ApprovedDocument Approve(Comment comment) =>
-            new ApprovedDocument(Id, Number, Description, Files, comment);
+            return WithStatus(DocumentStatus.WaitingForApproval);
+        }
+
+        public Validation<Error, Document> Approve(Comment comment)
+        {
+            if (Status != DocumentStatus.WaitingForApproval)
+                return new Error($"Document should have {DocumentStatus.WaitingForApproval} status");
+            
+            return new ApprovedDocument(Id, Number, Description, Files, comment);   
+        }
+
+        private Document WithStatus(DocumentStatus status) =>
+            new Document(Id, Number, Description, status, Files);
     }
 }

@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
 using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace Docman.Domain
 {
@@ -13,60 +11,45 @@ namespace Docman.Domain
         private static Document CreateDocument(this DocumentCreatedEvent evt) 
             => new Document(evt.EntityId, evt.Number, evt.Description, DocumentStatus.Draft);
 
-        private static Document Apply(this Document document, Event evt)
+        private static Validation<Error, Document> Apply(this Document document, Event evt)
         {
             return evt switch
             {
                 DocumentApprovedEvent approvedEvent => document.Approve(approvedEvent.Comment),
-                FileAddedEvent fileAddedEvent => document.WithFile(fileAddedEvent.FileId, fileAddedEvent.Name,
+                FileAddedEvent fileAddedEvent => document.AddFile(fileAddedEvent.FileId, fileAddedEvent.Name,
                     fileAddedEvent.Description),
-                DocumentSentForApprovalEvent _ => document.WithStatus(DocumentStatus.WaitingForApproval)
+                DocumentSentForApprovalEvent _ => document.WaitingForApproval()
             };
         }
 
-        public static Option<Document> From(IEnumerable<Event> history)
-            => history.Match(
-                Empty: () => None,
-                More: (createdEvent, otherEvents) => Some(
+        public static Validation<Error, Document> From(IEnumerable<Event> history, Guid documentId)
+        {
+            return history.Match(
+                Empty: () => new Error($"No document with Id '{documentId}' was found"),
+                More: (createdEvent, otherEvents) =>
                     otherEvents.Aggregate(
-                        seed: CreateDocument((DocumentCreatedEvent) createdEvent),
-                        func: (state, evt) => state.Apply(evt)
-                    )));
+                        seed: Validation<Error, Document>.Success(CreateDocument((DocumentCreatedEvent) createdEvent)),
+                        func: (state, evt) => state.Bind(doc =>
+                            doc.Apply(evt))));
+        }
 
         public static Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(
-            this Document document, string comment)
-        {
-            if (document.Status != DocumentStatus.WaitingForApproval)
-                return new Error($"Document should have {DocumentStatus.WaitingForApproval} status");
-
-            return Comment.Create(comment)
-                .Map(c => new DocumentApprovedEvent(document.Id, c))
-                .Map(evt => (document.Apply(evt), evt));
-        }
+            this Document document, string comment) =>
+            DocumentApprovedEvent.Create(document.Id, comment)
+                .Bind(evt => document.Apply(evt)
+                    .Map(doc => (doc, evt)));
 
         public static Validation<Error, (Document Document, FileAddedEvent Event)> AddFile(this Document document,
-            string fileName, string fileDescription)
-        {
-            if (document.Status != DocumentStatus.Draft)
-                return new Error($"Document should have {DocumentStatus.Draft} status");
-            
-            if (document.Files.Any(f => f.Name.Value.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
-                return new Error($"Document already has file with name '{fileName}'");
-
-            return File.Create(Guid.NewGuid(), fileName, fileDescription)
-                .Map(file => new FileAddedEvent(document.Id, file.Id, file.Name, file.Description, DateTime.UtcNow))
-                .Map(evt => (document.Apply(evt), evt));
-        }
+            string fileName, string fileDescription) =>
+            FileAddedEvent.Create(document.Id, fileName, fileDescription)
+                .Bind(evt => document.Apply(evt)
+                    .Map(doc => (doc, evt)));
 
         public static Validation<Error, (Document Document, DocumentSentForApprovalEvent Event)> SendForApproval(
-            this Document document)
-        {
-            if (document.Status != DocumentStatus.Draft)
-                return new Error($"Document should have {DocumentStatus.Draft} status");
-
-            return Validation<Error, DocumentSentForApprovalEvent>
+            this Document document) =>
+            Validation<Error, DocumentSentForApprovalEvent>
                 .Success(new DocumentSentForApprovalEvent(document.Id))
-                .Map(evt => (document.Apply(evt), evt));
-        }
+                .Bind(evt => document.Apply(evt)
+                    .Map(doc => (doc, evt)));
     }
 }

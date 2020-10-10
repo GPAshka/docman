@@ -23,9 +23,8 @@ namespace Docman.API.Controllers
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocument => id =>
             ReadEvents(id)
-                .BindT(e => DocumentStateTransition.From(e)
-                    .ToValidation(new Error($"No document with Id '{id}' was found")));
-        
+                .BindT(events => DocumentStateTransition.From(events, id));
+
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
             Action<Event> saveAndPublish)
         {
@@ -59,7 +58,7 @@ namespace Docman.API.Controllers
                 .MapT(events => events.Match(
                     Empty: () => None,
                     More: otherEvents => Some(DocumentHistory.EventsToDocumentHistory(otherEvents))))
-                .Map(val => val.Match<IActionResult>(
+                .Map(val => val.Match(
                     Fail: errors => BadRequest(string.Join(",", errors)),
                     Succ: res => res.Match<IActionResult>(
                         Some: Ok,
@@ -124,7 +123,8 @@ namespace Docman.API.Controllers
                 .Do(val =>
                     val.Do(res => SaveAndPublish(res.Event)))
                 .Map(val => val.Match<IActionResult>(
-                    Succ: res => Created($"documents/{id}/files/{res.Event?.FileId.ToString()}", null),
+                    Succ: res =>
+                        Created($"documents/{id}/files/{res.Event?.FileId.ToString()}", null),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
     }

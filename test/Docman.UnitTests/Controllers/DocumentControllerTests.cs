@@ -279,6 +279,23 @@ namespace Docman.UnitTests.Controllers
         }
         
         [Fact]
+        public async Task TestSendDocumentForApprovalInvalidIdBadrequestResult()
+        {
+            //Arrange
+            var readEventsFunc = ValidReadEventsFunc();
+            
+            _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.SendDocumentForApproval(Guid.Empty);
+            
+            //Assert
+            var badRequestResult = result as BadRequestObjectResult; 
+            Assert.NotNull(badRequestResult);
+            Assert.NotNull(badRequestResult.Value);
+        }
+        
+        [Fact]
         public async Task TestSendDocumentForApprovalReadEventsErrorBadRequestResult()
         {
             //Arrange

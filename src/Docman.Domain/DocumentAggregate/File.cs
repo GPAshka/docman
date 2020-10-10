@@ -15,11 +15,5 @@ namespace Docman.Domain.DocumentAggregate
             Name = name;
             Description = description;
         }
-
-        public static Validation<Error, File> Create(Guid id, string name, string description) =>
-            FileName.Create(name)
-                .Bind(n => FileDescription.Create(description)
-                    .Map(desc => new File(id, n, desc)));
-
     }
 }
