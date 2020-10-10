@@ -36,6 +36,13 @@ namespace Docman.API.Extensions
                 TimeStamp = @event.TimeStamp
             };
 
+        public static DocumentSentForApprovalEventDto ToDto(this DocumentSentForApprovalEvent @event) =>
+            new DocumentSentForApprovalEventDto
+            {
+                Id = @event.EntityId.ToString(),
+                TimeStamp = @event.TimeStamp
+            };
+
         public static Validation<Error, Event> ToEvent(this DocumentCreatedEventDto dto) =>
             DocumentNumber.Create(dto.Number)
                 .Bind(num => DocumentDescription.Create(dto.Description)
@@ -51,6 +58,9 @@ namespace Docman.API.Extensions
                     .Map(desc =>
                         (Event) new FileAddedEvent(Guid.Parse(dto.DocumentId), Guid.Parse(dto.FileId), name, desc,
                             dto.TimeStamp)));
+
+        public static Validation<Error, Event> ToEvent(this DocumentSentForApprovalEventDto dto) =>
+            Validation<Error, Event>.Success(new DocumentSentForApprovalEvent(Guid.Parse(dto.Id), dto.TimeStamp));
 
     }
 }

@@ -18,7 +18,8 @@ namespace Docman.Domain
             {
                 DocumentApprovedEvent approvedEvent => document.Approve(approvedEvent.Comment),
                 FileAddedEvent fileAddedEvent => document.WithFile(fileAddedEvent.FileId, fileAddedEvent.Name,
-                    fileAddedEvent.Description)
+                    fileAddedEvent.Description),
+                DocumentSentForApprovalEvent _ => document.WithStatus(DocumentStatus.WaitingForApproval)
             };
         }
 
@@ -34,8 +35,8 @@ namespace Docman.Domain
         public static Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(
             this Document document, string comment)
         {
-            if (document.Status != DocumentStatus.Draft)
-                return new Error($"Document should have {DocumentStatus.Draft} status");
+            if (document.Status != DocumentStatus.WaitingForApproval)
+                return new Error($"Document should have {DocumentStatus.WaitingForApproval} status");
 
             return Comment.Create(comment)
                 .Map(c => new DocumentApprovedEvent(document.Id, c))
@@ -50,6 +51,17 @@ namespace Docman.Domain
 
             return File.Create(Guid.NewGuid(), fileName, fileDescription)
                 .Map(file => new FileAddedEvent(document.Id, file.Id, file.Name, file.Description, DateTime.UtcNow))
+                .Map(evt => (document.Apply(evt), evt));
+        }
+
+        public static Validation<Error, (Document Document, DocumentSentForApprovalEvent Event)> SendForApproval(
+            this Document document)
+        {
+            if (document.Status != DocumentStatus.Draft)
+                return new Error($"Document should have {DocumentStatus.Draft} status");
+
+            return Validation<Error, DocumentSentForApprovalEvent>
+                .Success(new DocumentSentForApprovalEvent(document.Id))
                 .Map(evt => (document.Apply(evt), evt));
         }
 

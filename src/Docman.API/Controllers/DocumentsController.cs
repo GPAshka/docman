@@ -100,7 +100,13 @@ namespace Docman.API.Controllers
         [Route("{id:guid}/send-for-approval")]
         public async Task<IActionResult> SendDocumentForApproval(Guid id)
         {
-            return null;
+            return await GetDocument(id)
+                .BindT(d => d.SendForApproval())
+                .Do(val => val
+                    .Do(res => SaveAndPublish(res.Event)))
+                .Map(val => val.Match<IActionResult>(
+                    Succ: _ => NoContent(),
+                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
 
         [HttpPost]

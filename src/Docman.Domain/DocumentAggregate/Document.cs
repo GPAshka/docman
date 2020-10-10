@@ -34,6 +34,9 @@ namespace Docman.Domain.DocumentAggregate
             return new Document(Id, Number, Description, Status, newFiles);
         }
 
+        public Document WithStatus(DocumentStatus status) =>
+            new Document(Id, Number, Description, status, Files);
+
         public ApprovedDocument Approve(Comment comment) =>
             new ApprovedDocument(Id, Number, Description, Files, comment);
     }
