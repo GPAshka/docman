@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
 using LanguageExt;
@@ -48,6 +49,9 @@ namespace Docman.Domain
         {
             if (document.Status != DocumentStatus.Draft)
                 return new Error($"Document should have {DocumentStatus.Draft} status");
+            
+            if (document.Files.Any(f => f.Name.Value.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
+                return new Error($"Document already has file with name '{fileName}'");
 
             return File.Create(Guid.NewGuid(), fileName, fileDescription)
                 .Map(file => new FileAddedEvent(document.Id, file.Id, file.Name, file.Description, DateTime.UtcNow))

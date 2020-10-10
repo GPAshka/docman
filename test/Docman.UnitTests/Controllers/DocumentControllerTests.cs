@@ -220,6 +220,33 @@ namespace Docman.UnitTests.Controllers
         }
         
         [Fact]
+        public async Task TestAddFileFIleNameExistsBadRequestResult()
+        {
+            //Arrange
+            var documentId = Guid.NewGuid();
+            var command = new AddFileCommand("test", "test");
+            
+            var documentCreatedDto = new DocumentCreatedEventDto
+                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+            var fileAddedDto = new FileAddedEventDto
+            {
+                DocumentId = Guid.Empty.ToString(), FileId = Guid.Empty.ToString(), FileName = "test",
+                TimeStamp = DateTime.UtcNow
+            };
+            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
+
+            _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.AddFile(documentId, command);
+            
+            //Assert
+            var badRequestResult = result as BadRequestObjectResult; 
+            Assert.NotNull(badRequestResult);
+            Assert.NotNull(badRequestResult.Value);
+        }
+        
+        [Fact]
         public async Task TestSendDocumentForApprovalNoContentResult()
         {
             //Arrange
