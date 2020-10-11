@@ -19,16 +19,16 @@ namespace Docman.API.Controllers
     public class DocumentsController : ControllerBase
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
-        private readonly Action<Event> SaveAndPublish;
+        private readonly Action<Event> SaveEvent;
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocument => id =>
             ReadEvents(id)
                 .BindT(events => DocumentStateTransition.From(events, id));
 
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublish)
+            Action<Event> saveEvent)
         {
-            SaveAndPublish = saveAndPublish;
+            SaveEvent = saveEvent;
             ReadEvents = readEvents;
         }
 
@@ -74,7 +74,7 @@ namespace Docman.API.Controllers
                 command = command.WithId(Guid.NewGuid());
 
             return command.ToEvent()
-                .Do(SaveAndPublish)
+                .Do(SaveEvent)
                 .Match<IActionResult>(
                     Succ: evt => Created(evt.EntityId.ToString(), null),
                     Fail: errors => BadRequest(string.Join(",", errors)));
@@ -91,7 +91,7 @@ namespace Docman.API.Controllers
             return await GetDocument(id)
                 .BindT(d => d.Approve(command.Comment))
                 .Do(val => 
-                    val.Do(res => SaveAndPublish(res.Event)))
+                    val.Do(res => SaveEvent(res.Event)))
                 .Map(val => val.Match<IActionResult>(
                     Succ: res => NoContent(),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
@@ -106,7 +106,7 @@ namespace Docman.API.Controllers
             return await GetDocument(id)
                 .BindT(d => d.SendForApproval())
                 .Do(val => val
-                    .Do(res => SaveAndPublish(res.Event)))
+                    .Do(res => SaveEvent(res.Event)))
                 .Map(val => val.Match<IActionResult>(
                     Succ: _ => NoContent(),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
@@ -121,7 +121,7 @@ namespace Docman.API.Controllers
             return await GetDocument(id)
                 .BindT(d => d.AddFile(command.FileName, command.FileDescription))
                 .Do(val =>
-                    val.Do(res => SaveAndPublish(res.Event)))
+                    val.Do(res => SaveEvent(res.Event)))
                 .Map(val => val.Match<IActionResult>(
                     Succ: res =>
                         Created($"documents/{id}/files/{res.Event?.FileId.ToString()}", null),
