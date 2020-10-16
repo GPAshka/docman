@@ -1,6 +1,6 @@
 using System;
 
-namespace Docman.Domain.Events
+namespace Docman.Domain
 {
     public class Event
     {
