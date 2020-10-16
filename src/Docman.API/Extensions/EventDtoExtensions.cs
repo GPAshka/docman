@@ -43,6 +43,14 @@ namespace Docman.API.Extensions
                 TimeStamp = @event.TimeStamp
             };
 
+        public static DocumentRejectedEventDto ToDto(this DocumentRejectedEvent @event) =>
+            new DocumentRejectedEventDto
+            {
+                Id = @event.EntityId.ToString(),
+                Reason = @event.Reason.Value,
+                TimeStamp = @event.TimeStamp
+            };
+
         public static Validation<Error, Event> ToEvent(this DocumentCreatedEventDto dto) =>
             DocumentNumber.Create(dto.Number)
                 .Bind(num => DocumentDescription.Create(dto.Description)
@@ -62,5 +70,8 @@ namespace Docman.API.Extensions
         public static Validation<Error, Event> ToEvent(this DocumentSentForApprovalEventDto dto) =>
             Validation<Error, Event>.Success(new DocumentSentForApprovalEvent(Guid.Parse(dto.Id), dto.TimeStamp));
 
+        public static Validation<Error, Event> ToEvent(this DocumentRejectedEventDto dto) =>
+            RejectReason.Create(dto.Reason)
+                .Map(reason => (Event) new DocumentRejectedEvent(Guid.Parse(dto.Id), reason, dto.TimeStamp));
     }
 }

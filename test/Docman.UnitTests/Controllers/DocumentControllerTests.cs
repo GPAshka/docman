@@ -173,6 +173,68 @@ namespace Docman.UnitTests.Controllers
         }
         
         [Fact]
+        public async Task TestRejectDocumentNoContentResult()
+        {
+            //Arrange
+            var documentCreatedDto = new DocumentCreatedEventDto
+                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentSentToApprovalDto = new DocumentSentForApprovalEventDto
+                { Id = Guid.Empty.ToString(), TimeStamp = DateTime.UtcNow };
+
+            var readEventsFunc =
+                ValidReadEventsFunc(documentCreatedDto.ToEvent(), documentSentToApprovalDto.ToEvent());
+
+            var command = new RejectDocumentCommand("Bad document");
+            
+            _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.RejectDocument(Guid.Empty, command);
+            
+            //Assert
+            var noContentResult = result as NoContentResult; 
+            Assert.NotNull(noContentResult);
+        }
+        
+        [Fact]
+        public async Task TestRejectDocumentReadEventsErrorBadRequestResult()
+        {
+            //Arrange
+            var command = new RejectDocumentCommand("Reject");
+            const string error = "testError";
+
+            _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.RejectDocument(Guid.Empty, command);
+            
+            //Assert
+            var badRequestResult = result as BadRequestObjectResult; 
+            Assert.NotNull(badRequestResult);
+            Assert.NotNull(badRequestResult.Value);
+        }
+        
+        [Fact]
+        public async Task TestRejectDocumentInvalidCommandBadRequestResult()
+        {
+            //Arrange
+            var command = new RejectDocumentCommand(string.Empty);
+            var documentCreatedDto = new DocumentCreatedEventDto
+                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+
+            _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.RejectDocument(Guid.Empty, command);
+            
+            //Assert
+            var badRequestResult = result as BadRequestObjectResult; 
+            Assert.NotNull(badRequestResult);
+            Assert.NotNull(badRequestResult.Value);
+        }
+        
+        [Fact]
         public async Task TestAddFileCreatedResult()
         {
             //Arrange
@@ -279,7 +341,7 @@ namespace Docman.UnitTests.Controllers
         }
         
         [Fact]
-        public async Task TestSendDocumentForApprovalInvalidIdBadrequestResult()
+        public async Task TestSendDocumentForApprovalInvalidIdBadRequestResult()
         {
             //Arrange
             var readEventsFunc = ValidReadEventsFunc();

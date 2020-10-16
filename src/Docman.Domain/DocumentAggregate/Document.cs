@@ -56,6 +56,14 @@ namespace Docman.Domain.DocumentAggregate
             
             return new ApprovedDocument(Id, Number, Description, Files, comment);   
         }
+        
+        public Validation<Error, Document> Reject(RejectReason reason)
+        {
+            if (Status != DocumentStatus.WaitingForApproval)
+                return new Error($"Document should have {DocumentStatus.WaitingForApproval} status");
+            
+            return new RejectedDocument(Id, Number, Description, Files, reason);   
+        }
 
         private Document WithStatus(DocumentStatus status) =>
             new Document(Id, Number, Description, status, Files);

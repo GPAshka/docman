@@ -96,6 +96,21 @@ namespace Docman.API.Controllers
                     Succ: res => NoContent(),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
+        
+        [HttpPut]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Route("{id:guid}/reject")]
+        public async Task<IActionResult> RejectDocument(Guid id, [FromBody] RejectDocumentCommand command)
+        {
+            return await GetDocument(id)
+                .BindT(d => d.Reject(command.Reason))
+                .Do(val => 
+                    val.Do(res => SaveEvent(res.Event)))
+                .Map(val => val.Match<IActionResult>(
+                    Succ: res => NoContent(),
+                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+        }
 
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]

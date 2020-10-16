@@ -30,6 +30,7 @@ namespace Docman.API.Responses
                 DocumentCreatedEvent _ => DocumentStatus.Draft.ToString(),
                 DocumentSentForApprovalEvent _ => DocumentStatus.WaitingForApproval.ToString(),
                 DocumentApprovedEvent _ => DocumentStatus.Approved.ToString(),
+                DocumentRejectedEvent _ => DocumentStatus.Rejected.ToString(),
                 _ => string.Empty
             };
     }

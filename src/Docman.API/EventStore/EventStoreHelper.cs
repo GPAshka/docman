@@ -20,7 +20,8 @@ namespace Docman.API.EventStore
                     DocumentCreatedEvent createdEvent => createdEvent.ToDto(),
                     DocumentApprovedEvent approvedEvent => approvedEvent.ToDto(),
                     FileAddedEvent fileAddedEvent => fileAddedEvent.ToDto(),
-                    DocumentSentForApprovalEvent sentForApprovalEvent => sentForApprovalEvent.ToDto()
+                    DocumentSentForApprovalEvent sentForApprovalEvent => sentForApprovalEvent.ToDto(),
+                    DocumentRejectedEvent documentRejectedEvent => documentRejectedEvent.ToDto()
                 };
 
                 EventsRepository.AddEvent(connectionString, @event.EntityId, eventDto);
@@ -36,6 +37,7 @@ namespace Docman.API.EventStore
                         DocumentApprovedEventDto approvedEventDto => approvedEventDto.ToEvent(),
                         FileAddedEventDto fileAddedEventDto => fileAddedEventDto.ToEvent(),
                         DocumentSentForApprovalEventDto sentForApprovalEventDto => sentForApprovalEventDto.ToEvent(),
+                        DocumentRejectedEventDto rejectedEventDto => rejectedEventDto.ToEvent(),
                         _ => new Error($"Unknown event DTO type: {dto.GetType().Name}")
                     });
                 return events.Traverse(x => x);
