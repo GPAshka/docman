@@ -45,6 +45,9 @@ namespace Docman.Domain.DocumentAggregate
         {
             if (Status != DocumentStatus.Draft)
                 return new Error($"Document should have {DocumentStatus.Draft} status");
+            
+            if (!Files.Any())
+                return new Error("Document should have at least one file");
 
             return WithStatus(DocumentStatus.WaitingForApproval);
         }
