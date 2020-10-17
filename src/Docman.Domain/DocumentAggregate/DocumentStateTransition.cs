@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
 using LanguageExt;
 
-namespace Docman.Domain
+namespace Docman.Domain.DocumentAggregate
 {
     public static class DocumentStateTransition
     {
