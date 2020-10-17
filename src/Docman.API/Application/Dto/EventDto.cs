@@ -1,6 +1,6 @@
 using System;
 
-namespace Docman.API.Dto
+namespace Docman.API.Application.Dto
 {
     public class EventDto
     {

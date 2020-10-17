@@ -1,4 +1,4 @@
-using Docman.API.Commands;
+using Docman.API.Application.Commands;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;

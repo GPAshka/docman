@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Docman.API.Dto;
-using Docman.API.Dto.Events;
+using Docman.API.Application.Dto;
+using Docman.API.Application.Dto.Events;
 using Docman.API.Extensions;
 using Docman.Domain;
 using Docman.Domain.Events;
 using Docman.Infrastructure.EventStore;
 using LanguageExt;
 
-namespace Docman.API.EventStore
+namespace Docman.API.Application.EventStore
 {
     public static class EventStoreHelper
     {

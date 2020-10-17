@@ -5,7 +5,7 @@ using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;
 
-namespace Docman.API.Responses
+namespace Docman.API.Application.Responses
 {
     public class DocumentHistory
     {

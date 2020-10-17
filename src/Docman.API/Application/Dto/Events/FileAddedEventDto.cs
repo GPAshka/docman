@@ -1,6 +1,4 @@
-using System;
-
-namespace Docman.API.Dto.Events
+namespace Docman.API.Application.Dto.Events
 {
     public class FileAddedEventDto : EventDto
     {

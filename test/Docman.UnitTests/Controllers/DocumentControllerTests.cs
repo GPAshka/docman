@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Docman.API.Commands;
+using Docman.API.Application.Commands;
+using Docman.API.Application.Dto.Events;
+using Docman.API.Application.Responses;
 using Docman.API.Controllers;
-using Docman.API.Dto.Events;
 using Docman.API.Extensions;
-using Docman.API.Responses;
 using Docman.Domain;
 using LanguageExt;
 using Microsoft.AspNetCore.Mvc;

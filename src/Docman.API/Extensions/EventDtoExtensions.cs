@@ -1,5 +1,5 @@
 using System;
-using Docman.API.Dto.Events;
+using Docman.API.Application.Dto.Events;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Events;

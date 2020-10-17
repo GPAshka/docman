@@ -1,4 +1,4 @@
-namespace Docman.API.Commands
+namespace Docman.API.Application.Commands
 {
     public class RejectDocumentCommand
     {

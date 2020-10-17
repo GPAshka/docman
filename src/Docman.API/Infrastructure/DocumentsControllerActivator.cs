@@ -1,6 +1,6 @@
 using System;
+using Docman.API.Application.EventStore;
 using Docman.API.Controllers;
-using Docman.API.EventStore;
 using Docman.Infrastructure.EventStore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
