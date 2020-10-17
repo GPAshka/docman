@@ -10,7 +10,7 @@ namespace Docman.Infrastructure.EventStore
 {
     public static class EventsRepository
     {
-        public static Action<string, string, object> AddEvent =>
+        public static Func<string, string, object, Task> AddEvent =>
             async (connectionString, entityId, eventDto) =>
             {
                 using var connection = await CreateAndOpenConnection(connectionString);

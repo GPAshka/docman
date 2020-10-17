@@ -12,10 +12,10 @@ namespace Docman.API.Application.Helpers
 {
     public static class EventStoreHelper
     {
-        public static Action<string, EventDto> SaveEvent =>
-            (connectionString, eventDto) =>
+        public static Func<string, EventDto, Task> SaveEvent =>
+            async (connectionString, eventDto) =>
             {
-                EventsRepository.AddEvent(connectionString, eventDto.Id, eventDto);
+                await EventsRepository.AddEvent(connectionString, eventDto.Id, eventDto);
             };
         
         public static Func<string, Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents =>

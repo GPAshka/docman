@@ -45,7 +45,7 @@ namespace Docman.API.Infrastructure
             var readEvents = par(EventStoreHelper.ReadEvents, connectionString);
             var saveEvent = par(EventStoreHelper.SaveEvent, connectionString);
 
-            var saveAndPublish = par(Functions.SaveAndPublish, async dto => await mediator.Publish(dto),
+            var saveAndPublish = par(Functions.SaveAndPublish, dto => mediator.Publish(dto),
                 dto => saveEvent(dto));
             
             return new DocumentsController(readEvents, saveAndPublish);
