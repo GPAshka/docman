@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Docman.Domain.DocumentAggregate.Errors;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
@@ -31,11 +32,11 @@ namespace Docman.Domain.DocumentAggregate
         public Validation<Error, Document> AddFile(Guid id, FileName name, Option<FileDescription> description)
         {
             if (Status != DocumentStatus.Draft)
-                return new Error($"Document should have {DocumentStatus.Draft} status");
-            
+                return new InvalidStatusError(DocumentStatus.Draft, Status);
+
             if (Files.Any(f => f.Name.Equals(name)))
-                return new Error($"Document already has file with name '{name.Value}'");
-            
+                return new FileExistsError(name.Value);
+
             var file = new File(id, name, description);
             var newFiles = new List<File>(Files) { file };
             return new Document(Id, Number, Description, Status, newFiles);
@@ -44,10 +45,10 @@ namespace Docman.Domain.DocumentAggregate
         public Validation<Error, Document> WaitingForApproval()
         {
             if (Status != DocumentStatus.Draft)
-                return new Error($"Document should have {DocumentStatus.Draft} status");
+                return new InvalidStatusError(DocumentStatus.Draft, Status);
             
             if (!Files.Any())
-                return new Error("Document should have at least one file");
+                return new NoFilesError();
 
             return WithStatus(DocumentStatus.WaitingForApproval);
         }
@@ -55,15 +56,15 @@ namespace Docman.Domain.DocumentAggregate
         public Validation<Error, Document> Approve(Comment comment)
         {
             if (Status != DocumentStatus.WaitingForApproval)
-                return new Error($"Document should have {DocumentStatus.WaitingForApproval} status");
-            
+                return new InvalidStatusError(DocumentStatus.WaitingForApproval, Status);
+
             return new ApprovedDocument(Id, Number, Description, Files, comment);   
         }
         
         public Validation<Error, Document> Reject(RejectReason reason)
         {
             if (Status != DocumentStatus.WaitingForApproval)
-                return new Error($"Document should have {DocumentStatus.WaitingForApproval} status");
+                return new InvalidStatusError(DocumentStatus.WaitingForApproval, Status);
             
             return new RejectedDocument(Id, Number, Description, Files, reason);   
         }
