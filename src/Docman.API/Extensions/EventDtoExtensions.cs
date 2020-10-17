@@ -1,4 +1,5 @@
 using System;
+using Docman.API.Application.Dto;
 using Docman.API.Application.Dto.Events;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
@@ -9,7 +10,18 @@ namespace Docman.API.Extensions
 {
     public static class EventDtoExtensions
     {
-        public static DocumentCreatedEventDto ToDto(this DocumentCreatedEvent @event) =>
+        public static EventDto ToDto(this Event @event) =>
+            @event switch
+            {
+                DocumentCreatedEvent createdEvent => createdEvent.ToDto(),
+                DocumentApprovedEvent approvedEvent => approvedEvent.ToDto(),
+                FileAddedEvent fileAddedEvent => fileAddedEvent.ToDto(),
+                DocumentSentForApprovalEvent sentForApprovalEvent => sentForApprovalEvent.ToDto(),
+                DocumentRejectedEvent documentRejectedEvent => documentRejectedEvent.ToDto(),
+                _ => throw new ArgumentOutOfRangeException(nameof(@event))    //TODO
+            };
+
+        private static DocumentCreatedEventDto ToDto(this DocumentCreatedEvent @event) =>
             new DocumentCreatedEventDto
             {
                 Id = @event.EntityId.ToString(),
@@ -18,7 +30,7 @@ namespace Docman.API.Extensions
                 TimeStamp = @event.TimeStamp
             };
 
-        public static DocumentApprovedEventDto ToDto(this DocumentApprovedEvent @event) =>
+        private static DocumentApprovedEventDto ToDto(this DocumentApprovedEvent @event) =>
             new DocumentApprovedEventDto
             {
                 Id = @event.EntityId.ToString(),
@@ -26,7 +38,7 @@ namespace Docman.API.Extensions
                 TimeStamp = @event.TimeStamp
             };
 
-        public static FileAddedEventDto ToDto(this FileAddedEvent @event) =>
+        private static FileAddedEventDto ToDto(this FileAddedEvent @event) =>
             new FileAddedEventDto
             {
                 Id = @event.EntityId.ToString(),
@@ -36,14 +48,14 @@ namespace Docman.API.Extensions
                 TimeStamp = @event.TimeStamp
             };
 
-        public static DocumentSentForApprovalEventDto ToDto(this DocumentSentForApprovalEvent @event) =>
+        private static DocumentSentForApprovalEventDto ToDto(this DocumentSentForApprovalEvent @event) =>
             new DocumentSentForApprovalEventDto
             {
                 Id = @event.EntityId.ToString(),
                 TimeStamp = @event.TimeStamp
             };
 
-        public static DocumentRejectedEventDto ToDto(this DocumentRejectedEvent @event) =>
+        private static DocumentRejectedEventDto ToDto(this DocumentRejectedEvent @event) =>
             new DocumentRejectedEventDto
             {
                 Id = @event.EntityId.ToString(),

@@ -5,27 +5,17 @@ using Docman.API.Application.Dto;
 using Docman.API.Application.Dto.Events;
 using Docman.API.Extensions;
 using Docman.Domain;
-using Docman.Domain.DocumentAggregate.Events;
 using Docman.Infrastructure.EventStore;
 using LanguageExt;
 
-namespace Docman.API.Application.EventStore
+namespace Docman.API.Application.Helpers
 {
     public static class EventStoreHelper
     {
-        public static Action<string, Event> AddEvent =>
-            (connectionString, @event) =>
+        public static Action<string, EventDto> SaveEvent =>
+            (connectionString, eventDto) =>
             {
-                EventDto eventDto = @event switch
-                {
-                    DocumentCreatedEvent createdEvent => createdEvent.ToDto(),
-                    DocumentApprovedEvent approvedEvent => approvedEvent.ToDto(),
-                    FileAddedEvent fileAddedEvent => fileAddedEvent.ToDto(),
-                    DocumentSentForApprovalEvent sentForApprovalEvent => sentForApprovalEvent.ToDto(),
-                    DocumentRejectedEvent documentRejectedEvent => documentRejectedEvent.ToDto()
-                };
-
-                EventsRepository.AddEvent(connectionString, @event.EntityId, eventDto);
+                EventsRepository.AddEvent(connectionString, eventDto.Id, eventDto);
             };
         
         public static Func<string, Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents =>

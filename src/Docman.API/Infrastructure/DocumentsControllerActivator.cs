@@ -1,10 +1,14 @@
 using System;
-using Docman.API.Application.EventStore;
+using Docman.API.Application.Dto;
+using Docman.API.Application.Helpers;
 using Docman.API.Controllers;
-using Docman.Infrastructure.EventStore;
+using Docman.API.Extensions;
+using Docman.Domain;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using static LanguageExt.Prelude;
 
 namespace Docman.API.Infrastructure
@@ -12,10 +16,12 @@ namespace Docman.API.Infrastructure
     public class DocumentsControllerActivator : IControllerActivator
     {
         private readonly IConfiguration _configuration;
+        private readonly IServiceProvider _serviceProvider;
         
-        public DocumentsControllerActivator(IConfiguration configuration)
+        public DocumentsControllerActivator(IConfiguration configuration, IServiceProvider serviceProvider)
         {
             _configuration = configuration;
+            _serviceProvider = serviceProvider;
         }
         
         public object Create(ControllerContext context)
@@ -34,10 +40,15 @@ namespace Docman.API.Infrastructure
         {
             //TODO catch exceptions while reading configuration
             var connectionString = _configuration["EventStoreConnectionString"];
+            var mediator = _serviceProvider.GetRequiredService<IMediator>();
+            
             var readEvents = par(EventStoreHelper.ReadEvents, connectionString);
-            var saveEvent = par(EventStoreHelper.AddEvent, connectionString);
+            var saveEvent = par(EventStoreHelper.SaveEvent, connectionString);
 
-            return new DocumentsController(readEvents, saveEvent);
+            var saveAndPublish = par(Functions.SaveAndPublish, async dto => await mediator.Publish(dto),
+                dto => saveEvent(dto));
+            
+            return new DocumentsController(readEvents, saveAndPublish);
         }
     }
 }

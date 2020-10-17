@@ -1,4 +1,6 @@
+using Docman.API.Application.EventHandlers;
 using Docman.API.Infrastructure;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -27,7 +29,9 @@ namespace Docman.API
                     options.SerializerSettings.Converters.Add(new StringEnumConverter());
                 });
 
-            services.AddSingleton<IControllerActivator>(new DocumentsControllerActivator(Configuration));
+            services.AddMediatR(typeof(DocumentCreatedEventHandler));
+            services.AddSingleton<IControllerActivator>(serviceProvider =>
+                new DocumentsControllerActivator(Configuration, serviceProvider));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
