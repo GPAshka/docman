@@ -7,7 +7,6 @@ using Docman.API.Dto.Events;
 using Docman.API.Extensions;
 using Docman.API.Responses;
 using Docman.Domain;
-using Docman.Domain.Events;
 using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -306,7 +305,7 @@ namespace Docman.UnitTests.Controllers
                 { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
             var fileAddedDto = new FileAddedEventDto
             {
-                DocumentId = Guid.Empty.ToString(), FileId = Guid.Empty.ToString(), FileName = "test",
+                Id = Guid.Empty.ToString(), FileId = Guid.Empty.ToString(), FileName = "test",
                 TimeStamp = DateTime.UtcNow
             };
             var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());

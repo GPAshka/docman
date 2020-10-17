@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Docman.API.Dto;
 using Docman.API.Dto.Events;
 using Docman.API.Extensions;
 using Docman.Domain;
@@ -15,7 +16,7 @@ namespace Docman.API.EventStore
         public static Action<string, Event> AddEvent =>
             (connectionString, @event) =>
             {
-                object eventDto = @event switch
+                EventDto eventDto = @event switch
                 {
                     DocumentCreatedEvent createdEvent => createdEvent.ToDto(),
                     DocumentApprovedEvent approvedEvent => approvedEvent.ToDto(),
