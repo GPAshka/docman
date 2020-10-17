@@ -1,8 +1,7 @@
 using System;
-using Docman.Domain.DocumentAggregate;
 using LanguageExt;
 
-namespace Docman.Domain.Events
+namespace Docman.Domain.DocumentAggregate.Events
 {
     public class DocumentApprovedEvent : Event
     {

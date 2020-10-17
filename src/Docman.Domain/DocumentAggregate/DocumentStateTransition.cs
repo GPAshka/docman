@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Docman.Domain.Events;
+using Docman.Domain.DocumentAggregate.Events;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate

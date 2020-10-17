@@ -1,7 +1,7 @@
 using Docman.API.Application.Commands;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
-using Docman.Domain.Events;
+using Docman.Domain.DocumentAggregate.Events;
 using LanguageExt;
 
 namespace Docman.API.Extensions

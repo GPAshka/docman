@@ -1,6 +1,6 @@
 using System;
 
-namespace Docman.Domain.Events
+namespace Docman.Domain.DocumentAggregate.Events
 {
     public class DocumentSentForApprovalEvent : Event
     {

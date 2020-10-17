@@ -6,7 +6,6 @@ using Docman.API.Application.Responses;
 using Docman.API.Extensions;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
-using Docman.Domain.Events;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
