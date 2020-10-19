@@ -15,3 +15,12 @@ services:
       - "1113:1113"
       - "2112:2112"
       - "2113:2113"
+  postgres:
+    image: postgres:13.0
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=docman
+      - POSTGRES_PASSWORD=DocmanDocman
+      - POSTGRES_DB=Docman

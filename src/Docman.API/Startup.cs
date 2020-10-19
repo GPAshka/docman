@@ -1,6 +1,9 @@
+using System;
 using Docman.API.Infrastructure;
 using Docman.Infrastructure.PostgreSql;
+using Docman.Infrastructure.PostgreSql.Migrations;
 using Docman.Infrastructure.Repositories;
+using FluentMigrator.Runner;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,7 +38,14 @@ namespace Docman.API
             services.AddSingleton<IControllerActivator>(serviceProvider =>
                 new DocumentsControllerActivator(Configuration, serviceProvider));
             
-            services.AddDocumentRepositoryFunctions(Configuration);
+            var postgresConnectionString = Configuration["PostgreSqlConnectionString"];
+            services.AddSingleton<DocumentRepository.AddDocument>(par(DocumentPostgresRepository.AddDocument,
+                postgresConnectionString).Invoke);
+            
+            services.AddFluentMigratorCore().ConfigureRunner(rb => rb
+                .AddPostgres()
+                .WithGlobalConnectionString(postgresConnectionString)
+                .ScanIn(typeof(CreateDocumentTables).Assembly).For.Migrations());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,19 +63,19 @@ namespace Docman.API
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+
+            app.Migrate();
         }
     }
 
     internal static class CustomExtensions
     {
-        public static IServiceCollection AddDocumentRepositoryFunctions(this IServiceCollection services, IConfiguration configuration)
+        public static IApplicationBuilder Migrate(this IApplicationBuilder app)
         {
-            var connectionString = configuration["PostgreSqlConnectionString"];
-
-            services.AddSingleton<DocumentRepository.AddDocument>(par(DocumentPostgreSqlRepository.AddDocument,
-                connectionString).Invoke);
-
-            return services;
-        }   
+            using var scope = app.ApplicationServices.CreateScope();
+            var runner = scope.ServiceProvider.GetService<IMigrationRunner>();
+            runner.MigrateUp();
+            return app;
+        }
     }
 }
