@@ -17,6 +17,7 @@ namespace Docman.API.Application.EventHandlers
 
         public async Task Handle(DocumentCreatedEventDto notification, CancellationToken cancellationToken)
         {
+            // TODO handle and log exceptions
             await AddDocument(notification.Id, notification.Number, notification.Description);
         }
     }
