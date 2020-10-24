@@ -5,16 +5,15 @@ namespace Docman.Domain.DocumentAggregate.Events
 {
     public class DocumentCreatedEvent : Event
     {
-        public DocumentCreatedEvent(Guid entityId, DocumentNumber number, Option<DocumentDescription> description) :
-            base(entityId)
+        public DocumentCreatedEvent(DocumentId entityId, DocumentNumber number, Option<DocumentDescription> description) :
+            base(entityId.Value)
         {
             Number = number;
             Description = description;
         }
 
-        public DocumentCreatedEvent(Guid entityId, DocumentNumber number, Option<DocumentDescription> description,
-            DateTime timeStamp) :
-            base(entityId, timeStamp)
+        public DocumentCreatedEvent(DocumentId entityId, DocumentNumber number, Option<DocumentDescription> description,
+            DateTime timeStamp) : base(entityId.Value, timeStamp)
         {
             Number = number;
             Description = description;

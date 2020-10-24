@@ -7,18 +7,14 @@ namespace Docman.Domain.DocumentAggregate.Events
     {
         public RejectReason Reason { get; }
 
-        public DocumentRejectedEvent(Guid entityId, RejectReason reason) : base(entityId)
+        public DocumentRejectedEvent(DocumentId entityId, RejectReason reason, DateTime timeStamp) : base(
+            entityId.Value, timeStamp)
         {
             Reason = reason;
         }
 
-        public DocumentRejectedEvent(Guid entityId, RejectReason reason, DateTime timeStamp) : base(entityId, timeStamp)
-        {
-            Reason = reason;
-        }
-
-        public static Validation<Error, DocumentRejectedEvent> Create(Guid documentId, string reason) =>
+        public static Validation<Error, DocumentRejectedEvent> Create(DocumentId documentId, string reason) =>
             RejectReason.Create(reason)
-                .Map(r => new DocumentRejectedEvent(documentId, r));
+                    .Map(r => new DocumentRejectedEvent(documentId, r, DateTime.UtcNow));
     }
 }

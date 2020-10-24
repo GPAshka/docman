@@ -29,7 +29,7 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
             
             _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
@@ -114,12 +114,17 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var fileAddedDto = new FileAddedEventDto
+            {
+                Id = Guid.Empty, FileId = Guid.Empty.ToString(), FileName = "test",
+                TimeStamp = DateTime.UtcNow
+            };
             var documentSentToApprovalDto = new DocumentSentForApprovalEventDto
-                { Id = Guid.Empty.ToString(), TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, TimeStamp = DateTime.UtcNow };
 
-            var readEventsFunc =
-                ValidReadEventsFunc(documentCreatedDto.ToEvent(), documentSentToApprovalDto.ToEvent());
+            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent(),
+                documentSentToApprovalDto.ToEvent());
 
             var command = new ApproveDocumentCommand("approve");
             
@@ -157,7 +162,7 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var command = new ApproveDocumentCommand(null);
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
@@ -176,12 +181,17 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var fileAddedDto = new FileAddedEventDto
+            {
+                Id = Guid.Empty, FileId = Guid.Empty.ToString(), FileName = "test",
+                TimeStamp = DateTime.UtcNow
+            };
             var documentSentToApprovalDto = new DocumentSentForApprovalEventDto
-                { Id = Guid.Empty.ToString(), TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, TimeStamp = DateTime.UtcNow };
 
             var readEventsFunc =
-                ValidReadEventsFunc(documentCreatedDto.ToEvent(), documentSentToApprovalDto.ToEvent());
+                ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent(), documentSentToApprovalDto.ToEvent());
 
             var command = new RejectDocumentCommand("Bad document");
             
@@ -219,7 +229,7 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var command = new RejectDocumentCommand(string.Empty);
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
@@ -240,7 +250,7 @@ namespace Docman.UnitTests.Controllers
             var documentId = Guid.NewGuid();
             var command = new AddFileCommand("test", "description");
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
             
             _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
@@ -280,7 +290,7 @@ namespace Docman.UnitTests.Controllers
             var documentId = Guid.NewGuid();
             var command = new AddFileCommand(null, "test");
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
@@ -302,10 +312,10 @@ namespace Docman.UnitTests.Controllers
             var command = new AddFileCommand("test", "test");
             
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var fileAddedDto = new FileAddedEventDto
             {
-                Id = Guid.Empty.ToString(), FileId = Guid.Empty.ToString(), FileName = "test",
+                Id = Guid.Empty, FileId = Guid.Empty.ToString(), FileName = "test",
                 TimeStamp = DateTime.UtcNow
             };
             var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
@@ -326,8 +336,13 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty.ToString(), Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var fileAddedDto = new FileAddedEventDto
+            {
+                Id = Guid.Empty, FileId = Guid.Empty.ToString(), FileName = "test",
+                TimeStamp = DateTime.UtcNow
+            };
+            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
             
             _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
             
@@ -337,6 +352,25 @@ namespace Docman.UnitTests.Controllers
             //Assert
             var noContentResult = result as NoContentResult; 
             Assert.NotNull(noContentResult);
+        }
+        
+        [Fact]
+        public async Task TestSendDocumentForApprovalNoFilesBadRequestResult()
+        {
+            //Arrange
+            var documentCreatedDto = new DocumentCreatedEventDto
+                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+            
+            _documentsController = new DocumentsController(readEventsFunc, SaveAndPublish);
+            
+            //Act
+            var result = await _documentsController.SendDocumentForApproval(Guid.Empty);
+            
+            //Assert
+            var badRequestResult = result as BadRequestObjectResult; 
+            Assert.NotNull(badRequestResult);
+            Assert.NotNull(badRequestResult.Value);
         }
         
         [Fact]

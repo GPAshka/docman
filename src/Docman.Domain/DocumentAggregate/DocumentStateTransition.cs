@@ -7,8 +7,8 @@ namespace Docman.Domain.DocumentAggregate
 {
     public static class DocumentStateTransition
     {
-        private static Document CreateDocument(this DocumentCreatedEvent evt) 
-            => new Document(evt.EntityId, evt.Number, evt.Description, DocumentStatus.Draft);
+        private static Document CreateDocument(this DocumentCreatedEvent evt)
+            => new Document(new DocumentId(evt.EntityId), evt.Number, evt.Description, DocumentStatus.Draft);
 
         private static Validation<Error, Document> Apply(this Document document, Event evt)
         {
@@ -38,9 +38,9 @@ namespace Docman.Domain.DocumentAggregate
             DocumentApprovedEvent.Create(document.Id, comment)
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));
-        
-        public static Validation<Error, (Document Document, DocumentRejectedEvent Event)> Reject(
-            this Document document, string reason) =>
+
+        public static Validation<Error, (Document Document, DocumentRejectedEvent Event)> Reject(this Document document,
+            string reason) =>
             DocumentRejectedEvent.Create(document.Id, reason)
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));

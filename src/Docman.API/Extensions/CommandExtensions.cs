@@ -11,6 +11,6 @@ namespace Docman.API.Extensions
         public static Validation<Error, Event> ToEvent(this CreateDocumentCommand command) =>
             DocumentNumber.Create(command.Number)
                 .Bind(num => DocumentDescription.Create(command.Description)
-                    .Map(desc => (Event) new DocumentCreatedEvent(command.Id, num, desc)));
+                    .Map(desc => (Event) new DocumentCreatedEvent(new DocumentId(command.Id), num, desc)));
     }
 }

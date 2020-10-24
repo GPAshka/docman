@@ -8,13 +8,13 @@ namespace Docman.Domain.DocumentAggregate
 {
     public class Document : Record<Document>
     {
-        public Guid Id { get; }
+        public DocumentId Id { get; }
         public DocumentNumber Number { get; }
         public Option<DocumentDescription> Description { get; }
         public IEnumerable<File> Files { get; }
         public DocumentStatus Status { get; }
 
-        protected Document(Guid id, DocumentNumber number, Option<DocumentDescription> description,
+        protected Document(DocumentId id, DocumentNumber number, Option<DocumentDescription> description,
             DocumentStatus status, IEnumerable<File> files)
         {
             Id = id;
@@ -24,7 +24,7 @@ namespace Docman.Domain.DocumentAggregate
             Files = files;
         }
         
-        public Document(Guid id, DocumentNumber number, Option<DocumentDescription> description,
+        public Document(DocumentId id, DocumentNumber number, Option<DocumentDescription> description,
             DocumentStatus status) : this(id, number, description, status, new List<File>())
         {
         }

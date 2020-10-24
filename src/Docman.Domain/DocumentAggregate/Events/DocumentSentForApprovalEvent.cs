@@ -4,11 +4,11 @@ namespace Docman.Domain.DocumentAggregate.Events
 {
     public class DocumentSentForApprovalEvent : Event
     {
-        public DocumentSentForApprovalEvent(Guid entityId) : base(entityId)
+        public DocumentSentForApprovalEvent(DocumentId entityId) : this(entityId, DateTime.UtcNow)
         {
         }
 
-        public DocumentSentForApprovalEvent(Guid entityId, DateTime timeStamp) : base(entityId, timeStamp)
+        public DocumentSentForApprovalEvent(DocumentId entityId, DateTime timeStamp) : base(entityId.Value, timeStamp)
         {
         }
     }

@@ -10,11 +10,11 @@ namespace Docman.Infrastructure.EventStore
 {
     public static class EventsRepository
     {
-        public static Func<string, string, object, Task> AddEvent =>
+        public static Func<string, Guid, object, Task> AddEvent =>
             async (connectionString, entityId, eventDto) =>
             {
                 using var connection = await CreateAndOpenConnection(connectionString);
-                await connection.AppendToStreamAsync(entityId, ExpectedVersion.Any, Map(eventDto));
+                await connection.AppendToStreamAsync(entityId.ToString(), ExpectedVersion.Any, Map(eventDto));
             };
 
         public static Func<string, Guid, Task<IEnumerable<object>>> ReadEvents =>

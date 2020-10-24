@@ -24,7 +24,7 @@ namespace Docman.API.Application.EventHandlers
         public async Task Handle(DocumentCreatedEventDto notification, CancellationToken cancellationToken)
         {
             TryAsync<Unit> handle = async () =>
-                await AddDocument(notification.Id, notification.Number, notification.Description).ToUnit();
+                await AddDocument(notification.Id.ToString(), notification.Number, notification.Description).ToUnit();
 
             await handle.Match(
                 Succ: u => { },

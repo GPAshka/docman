@@ -6,19 +6,15 @@ namespace Docman.Domain.DocumentAggregate.Events
     public class DocumentApprovedEvent : Event
     {
         public Comment Comment { get; }
-        
-        public DocumentApprovedEvent(Guid entityId, Comment comment) : base(entityId)
+
+        public DocumentApprovedEvent(DocumentId entityId, Comment comment, DateTime timeStamp) : base(entityId.Value,
+            timeStamp)
         {
             Comment = comment;
         }
 
-        public DocumentApprovedEvent(Guid entityId, Comment comment, DateTime timeStamp) : base(entityId, timeStamp)
-        {
-            Comment = comment;
-        }
-
-        public static Validation<Error, DocumentApprovedEvent> Create(Guid documentId, string comment) =>
+        public static Validation<Error, DocumentApprovedEvent> Create(DocumentId documentId, string comment) =>
             Comment.Create(comment)
-                .Map(c => new DocumentApprovedEvent(documentId, c));
+                .Map(c => new DocumentApprovedEvent(documentId, c, DateTime.UtcNow));
     }
 }
