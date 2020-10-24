@@ -1,3 +1,4 @@
+using System;
 using FluentMigrator;
 
 namespace Docman.Infrastructure.PostgreSql.Migrations
@@ -11,12 +12,13 @@ namespace Docman.Infrastructure.PostgreSql.Migrations
 
             Create.Table("Documents")
                 .InSchema("documents")
-                .WithColumn("Id").AsString().NotNullable()
+                .WithColumn("Id").AsGuid().NotNullable()
                 .WithColumn("Number").AsString().NotNullable()
                 .WithColumn("Description").AsString().Nullable()
                 .WithColumn("Status").AsString().NotNullable()
                 .WithColumn("ApprovalComment").AsString().Nullable()
-                .WithColumn("RejectReason").AsString().Nullable();
+                .WithColumn("RejectReason").AsString().Nullable()
+                .WithColumn("DateCreated").AsDateTime().NotNullable().WithDefaultValue(DateTime.UtcNow);
         }
 
         public override void Down()

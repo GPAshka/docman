@@ -1,15 +1,17 @@
 using System;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Docman.Domain.DocumentAggregate;
+using Docman.Infrastructure.Dto;
 using Npgsql;
 
 namespace Docman.Infrastructure.PostgreSql
 {
     public static class DocumentPostgresRepository
     {
-        public static Func<string, string, string, string, Task> AddDocument =>
+        public static Func<string, Guid, string, string, Task> AddDocument =>
             async (connectionString, documentId, number, description) =>
             {
                 const string query =
@@ -23,6 +25,21 @@ namespace Docman.Infrastructure.PostgreSql
                     Description = description,
                     Status = DocumentStatus.Draft.ToString()
                 });
+            };
+
+        public static Func<string, string, Task<DocumentDatabaseDto?>> GetDocumentByNumber =>
+            async (connectionString, number) =>
+            {
+                const string query =
+                    "SELECT \"Id\", \"Number\", \"Description\", \"Status\", \"ApprovalComment\", \"RejectReason\" FROM documents.\"Documents\" WHERE \"Number\" = @Number";
+
+                using IDbConnection connection = new NpgsqlConnection(connectionString);
+                var documents = await connection.QueryAsync<DocumentDatabaseDto>(query, new
+                {
+                    Number = number
+                });
+
+                return documents.FirstOrDefault();
             };
     }
 }

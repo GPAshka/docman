@@ -1,9 +1,7 @@
 using System;
-using Docman.API.Application.Dto;
 using Docman.API.Application.Helpers;
 using Docman.API.Controllers;
-using Docman.API.Extensions;
-using Docman.Domain;
+using Docman.Infrastructure.PostgreSql;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -39,16 +37,21 @@ namespace Docman.API.Infrastructure
         private DocumentsController NewDocumentsController()
         {
             //TODO catch exceptions while reading configuration
-            var connectionString = _configuration["EventStoreConnectionString"];
+            var eventStoreConnectionString = _configuration["EventStoreConnectionString"];
+            var postgresConnectionString = _configuration["PostgreSqlConnectionString"];
+            
             var mediator = _serviceProvider.GetRequiredService<IMediator>();
             
-            var readEvents = par(EventStoreHelper.ReadEvents, connectionString);
-            var saveEvent = par(EventStoreHelper.SaveEvent, connectionString);
-
-            var saveAndPublish = par(Functions.SaveAndPublish, dto => mediator.Publish(dto),
-                dto => saveEvent(dto));
+            var readEvents = par(EventStoreHelper.ReadEvents, eventStoreConnectionString);
+            var saveEvent = par(EventStoreHelper.SaveEvent, eventStoreConnectionString);
             
-            return new DocumentsController(readEvents, saveAndPublish);
+            var saveAndPublish = par(HelperFunctions.SaveAndPublish, dto => mediator.Publish(dto),
+                dto => saveEvent(dto));
+
+            var getDocumentByNumber = par(DocumentPostgresRepository.GetDocumentByNumber, postgresConnectionString);
+            var validateCreateCommand = par(HelperFunctions.ValidateCreateCommand, number => getDocumentByNumber(number));
+
+            return new DocumentsController(readEvents, saveAndPublish, validateCreateCommand);
         }
     }
 }

@@ -17,18 +17,23 @@ namespace Docman.API.Controllers
     [Route("[controller]")]
     public class DocumentsController : ControllerBase
     {
+        private readonly Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>>
+            ValidateCreateCommand;
+
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
         private readonly Action<Event> SaveAndPublishEvent;
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocument => id =>
             ReadEvents(id)
-                .BindT(events => DocumentStateTransition.From(events, id));      
+                .BindT(events => DocumentStateTransition.From(events, id));
 
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublishEvent)
+            Action<Event> saveAndPublishEvent,
+            Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> validateCreateCommand)
         {
             SaveAndPublishEvent = saveAndPublishEvent;
             ReadEvents = readEvents;
+            ValidateCreateCommand = validateCreateCommand;
         }
 
         [HttpGet]
@@ -67,16 +72,18 @@ namespace Docman.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult CreateDocument([FromBody] CreateDocumentCommand command)
+        public async Task<IActionResult> CreateDocument([FromBody] CreateDocumentCommand command)
         {
             if (command.Id == Guid.Empty)
                 command = command.WithId(Guid.NewGuid());
 
-            return command.ToEvent()
-                .Do(SaveAndPublishEvent)
-                .Match<IActionResult>(
-                    Succ: evt => Created(evt.EntityId.ToString(), null),
-                    Fail: errors => BadRequest(string.Join(",", errors)));
+            return await ValidateCreateCommand(command)
+                .BindT(c => c.ToEvent())
+                .Do(val =>
+                    val.Do(e => SaveAndPublishEvent(e)))
+                .Map(val => val.Match<IActionResult>(
+                    Succ: evt => Created($"documents/{evt.EntityId}", null),
+                    Fail: errors => BadRequest(string.Join(",", errors))));
         }
 
         [HttpPut]
