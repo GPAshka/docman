@@ -69,6 +69,14 @@ namespace Docman.Domain.DocumentAggregate
             return new RejectedDocument(Id, Number, Description, Files, reason);   
         }
 
+        public Validation<Error, Document> Update(DocumentNumber number, Option<DocumentDescription> description)
+        {
+            if (Status != DocumentStatus.Draft)
+                return new InvalidStatusError(DocumentStatus.Draft, Status);
+
+            return new Document(Id, number, description, Status, Files);
+        }
+
         private Document WithStatus(DocumentStatus status) =>
             new Document(Id, Number, Description, status, Files);
     }

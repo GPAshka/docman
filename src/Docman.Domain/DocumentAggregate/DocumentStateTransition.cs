@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Docman.Domain.DocumentAggregate.Errors;
 using Docman.Domain.DocumentAggregate.Events;
 using LanguageExt;
 
@@ -18,20 +19,28 @@ namespace Docman.Domain.DocumentAggregate
                 FileAddedEvent fileAddedEvent => document.AddFile(fileAddedEvent.FileId, fileAddedEvent.Name,
                     fileAddedEvent.Description),
                 DocumentSentForApprovalEvent _ => document.WaitingForApproval(),
-                DocumentRejectedEvent rejectedEvent => document.Reject(rejectedEvent.Reason)
+                DocumentRejectedEvent rejectedEvent => document.Reject(rejectedEvent.Reason),
+                DocumentUpdatedEvent updatedEvent => document.Update(updatedEvent.Number, updatedEvent.Description)
             };
         }
 
         public static Validation<Error, Document> From(IEnumerable<Event> history, Guid documentId)
         {
             return history.Match(
-                Empty: () => new Error($"No document with Id '{documentId}' was found"),
+                Empty: () => new DocumentNotFoundError(documentId), 
                 More: (createdEvent, otherEvents) =>
                     otherEvents.Aggregate(
                         seed: Validation<Error, Document>.Success(CreateDocument((DocumentCreatedEvent) createdEvent)),
                         func: (state, evt) => state.Bind(doc =>
                             doc.Apply(evt))));
         }
+
+        public static Validation<Error, (Document Document, DocumentUpdatedEvent Event)> Update(this Document document,
+            string number, string description) =>
+            DocumentUpdatedEvent.Create(document.Id, number, description)
+                .Bind(evt => document.Apply(evt)
+                    .Map(doc => (doc, evt)));
+        
 
         public static Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(
             this Document document, string comment) =>

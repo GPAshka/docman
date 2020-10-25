@@ -27,19 +27,15 @@ namespace Docman.Infrastructure.PostgreSql
                 });
             };
 
-        public static Func<string, string, Task<DocumentDatabaseDto?>> GetDocumentByNumber =>
+        public static Func<string, string, Task<bool>> DocumentExistsByNumberAsync =>
             async (connectionString, number) =>
             {
-                const string query =
-                    "SELECT \"Id\", \"Number\", \"Description\", \"Status\", \"ApprovalComment\", \"RejectReason\" FROM documents.\"Documents\" WHERE \"Number\" = @Number";
+                const string query = "SELECT COUNT(1) FROM documents.\"Documents\" WHERE \"Number\" = @Number";
 
                 using IDbConnection connection = new NpgsqlConnection(connectionString);
-                var documents = await connection.QueryAsync<DocumentDatabaseDto>(query, new
-                {
-                    Number = number
-                });
+                var exists = await connection.ExecuteScalarAsync<bool>(query, new { Number = number });
 
-                return documents.FirstOrDefault();
+                return exists;
             };
     }
 }

@@ -2,6 +2,7 @@ using System;
 using Docman.API.Application.Helpers;
 using Docman.API.Controllers;
 using Docman.Infrastructure.PostgreSql;
+using Docman.Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -48,10 +49,11 @@ namespace Docman.API.Infrastructure
             var saveAndPublish = par(HelperFunctions.SaveAndPublish, dto => mediator.Publish(dto),
                 dto => saveEvent(dto));
 
-            var getDocumentByNumber = par(DocumentPostgresRepository.GetDocumentByNumber, postgresConnectionString);
-            var validateCreateCommand = par(HelperFunctions.ValidateCreateCommand, number => getDocumentByNumber(number));
+            var documentExistsByNumber = par(DocumentPostgresRepository.DocumentExistsByNumberAsync,
+                postgresConnectionString);
 
-            return new DocumentsController(readEvents, saveAndPublish, validateCreateCommand);
+            return new DocumentsController(readEvents, saveAndPublish,
+                new DocumentRepository.DocumentExistsByNumber(documentExistsByNumber));
         }
     }
 }

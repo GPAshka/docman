@@ -6,6 +6,8 @@ using Docman.API.Application.Responses;
 using Docman.API.Extensions;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
+using Docman.Domain.DocumentAggregate.Errors;
+using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,23 +19,38 @@ namespace Docman.API.Controllers
     [Route("[controller]")]
     public class DocumentsController : ControllerBase
     {
-        private readonly Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>>
-            ValidateCreateCommand;
-
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
         private readonly Action<Event> SaveAndPublishEvent;
+        private readonly DocumentRepository.DocumentExistsByNumber DocumentExistsByNumber;
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocument => id =>
             ReadEvents(id)
                 .BindT(events => DocumentStateTransition.From(events, id));
 
+        private Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> ValidateCreateCommand =>
+            async createCommand =>
+            {
+                if (await DocumentExistsByNumber(createCommand.Number))
+                    return new DocumentWithNumberExistsError(createCommand.Number);
+
+                return Validation<Error, CreateDocumentCommand>.Success(createCommand);
+            };
+
+        private Func<UpdateDocumentCommand, Task<Validation<Error, UpdateDocumentCommand>>> ValidateUpdateCommand =>
+            async updateCommand =>
+            {
+                if (await DocumentExistsByNumber(updateCommand.Number))
+                    return new DocumentWithNumberExistsError(updateCommand.Number);
+
+                return Validation<Error, UpdateDocumentCommand>.Success(updateCommand);
+            };
+
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublishEvent,
-            Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> validateCreateCommand)
+            Action<Event> saveAndPublishEvent, DocumentRepository.DocumentExistsByNumber documentExistsByNumber)
         {
             SaveAndPublishEvent = saveAndPublishEvent;
             ReadEvents = readEvents;
-            ValidateCreateCommand = validateCreateCommand;
+            DocumentExistsByNumber = documentExistsByNumber;
         }
 
         [HttpGet]
@@ -89,11 +106,25 @@ namespace Docman.API.Controllers
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Route("{id:guid}")]
+        public async Task<IActionResult> UpdateDocument(Guid id, [FromBody] UpdateDocumentCommand command)
+        {
+            return await ValidateUpdateCommand(command)
+                .BindT(c => GetDocument(id)
+                    .BindT(d => d.Update(c.Number, c.Description)))
+                .Do(val =>
+                    val.Do(res => SaveAndPublishEvent(res.Event)))
+                .Map(val => val.Match<IActionResult>(
+                    Succ: res => NoContent(),
+                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+        }
+        
+        [HttpPut]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Route("{id:guid}/approve")]
         public async Task<IActionResult> ApproveDocument(Guid id, [FromBody] ApproveDocumentCommand command)
         {
-            //TODO validate request
-
             return await GetDocument(id)
                 .BindT(d => d.Approve(command.Comment))
                 .Do(val => 
