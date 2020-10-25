@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Docman.API.Application.Commands;
+using Docman.API.Application.Helpers;
 using Docman.API.Application.Responses;
 using Docman.API.Extensions;
 using Docman.Domain;
@@ -25,7 +26,7 @@ namespace Docman.API.Controllers
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocument => id =>
             ReadEvents(id)
-                .BindT(events => DocumentStateTransition.From(events, id));
+                .BindT(events => DocumentHelper.From(events, id));
 
         private Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> ValidateCreateCommand =>
             async createCommand =>

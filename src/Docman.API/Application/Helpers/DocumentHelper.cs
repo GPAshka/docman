@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Docman.Domain;
+using Docman.Domain.DocumentAggregate;
 using Docman.Domain.DocumentAggregate.Errors;
 using Docman.Domain.DocumentAggregate.Events;
 using LanguageExt;
 
-namespace Docman.Domain.DocumentAggregate
+namespace Docman.API.Application.Helpers
 {
-    public static class DocumentStateTransition
+    public static class DocumentHelper
     {
         private static Document CreateDocument(this DocumentCreatedEvent evt)
             => new Document(new DocumentId(evt.EntityId), evt.Number, evt.Description, DocumentStatus.Draft);
@@ -20,17 +22,19 @@ namespace Docman.Domain.DocumentAggregate
                     fileAddedEvent.Description),
                 DocumentSentForApprovalEvent _ => document.WaitingForApproval(),
                 DocumentRejectedEvent rejectedEvent => document.Reject(rejectedEvent.Reason),
-                DocumentUpdatedEvent updatedEvent => document.Update(updatedEvent.Number, updatedEvent.Description)
+                DocumentUpdatedEvent updatedEvent => document.Update(updatedEvent.Number, updatedEvent.Description),
+                _ => new Error($"Unknown event type: {evt.GetType().Name}")
             };
         }
 
         public static Validation<Error, Document> From(IEnumerable<Event> history, Guid documentId)
         {
             return history.Match(
-                Empty: () => new DocumentNotFoundError(documentId), 
+                Empty: () => new DocumentNotFoundError(documentId),
                 More: (createdEvent, otherEvents) =>
                     otherEvents.Aggregate(
-                        seed: Validation<Error, Document>.Success(CreateDocument((DocumentCreatedEvent) createdEvent)),
+                        seed: Validation<Error, Document>.Success(
+                            ((DocumentCreatedEvent) createdEvent).CreateDocument()),
                         func: (state, evt) => state.Bind(doc =>
                             doc.Apply(evt))));
         }
@@ -40,7 +44,6 @@ namespace Docman.Domain.DocumentAggregate
             DocumentUpdatedEvent.Create(document.Id.Value, number, description)
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));
-        
 
         public static Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(
             this Document document, string comment) =>
