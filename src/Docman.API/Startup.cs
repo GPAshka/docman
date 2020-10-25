@@ -1,4 +1,3 @@
-using System;
 using Docman.API.Infrastructure;
 using Docman.Infrastructure.PostgreSql;
 using Docman.Infrastructure.PostgreSql.Migrations;
@@ -39,8 +38,10 @@ namespace Docman.API
                 new DocumentsControllerActivator(Configuration, serviceProvider));
             
             var postgresConnectionString = Configuration["PostgreSqlConnectionString"];
-            services.AddSingleton<DocumentRepository.AddDocument>(par(DocumentPostgresRepository.AddDocument,
-                postgresConnectionString).Invoke);
+            services.AddSingleton(new DocumentRepository.AddDocument(par(DocumentPostgresRepository.AddDocument,
+                postgresConnectionString)));
+            services.AddSingleton(new DocumentRepository.UpdateDocument(par(DocumentPostgresRepository.UpdateDocument,
+                postgresConnectionString)));
             
             services.AddFluentMigratorCore().ConfigureRunner(rb => rb
                 .AddPostgres()

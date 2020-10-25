@@ -1,10 +1,8 @@
 using System;
 using System.Data;
-using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Docman.Domain.DocumentAggregate;
-using Docman.Infrastructure.Dto;
 using Npgsql;
 
 namespace Docman.Infrastructure.PostgreSql
@@ -24,6 +22,21 @@ namespace Docman.Infrastructure.PostgreSql
                     Number = number,
                     Description = description,
                     Status = DocumentStatus.Draft.ToString()
+                });
+            };
+        
+        public static Func<string, Guid, string, string, Task> UpdateDocument =>
+            async (connectionString, documentId, number, description) =>
+            {
+                const string query =
+                    "UPDATE documents.\"Documents\" SET \"Number\" = @Number, \"Description\" = @Description WHERE \"Id\" = @Id)";
+                
+                using IDbConnection connection = new NpgsqlConnection(connectionString);
+                await connection.ExecuteAsync(query, new
+                {
+                    Id = documentId,
+                    Number = number,
+                    Description = description
                 });
             };
 

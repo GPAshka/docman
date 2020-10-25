@@ -12,7 +12,7 @@ namespace Docman.Infrastructure.PostgreSql.Migrations
 
             Create.Table("Documents")
                 .InSchema("documents")
-                .WithColumn("Id").AsGuid().NotNullable()
+                .WithColumn("Id").AsGuid().NotNullable().PrimaryKey()
                 .WithColumn("Number").AsString().NotNullable()
                 .WithColumn("Description").AsString().Nullable()
                 .WithColumn("Status").AsString().NotNullable()
