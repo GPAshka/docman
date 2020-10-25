@@ -37,26 +37,26 @@ namespace Docman.Domain.DocumentAggregate
 
         public static Validation<Error, (Document Document, DocumentUpdatedEvent Event)> Update(this Document document,
             string number, string description) =>
-            DocumentUpdatedEvent.Create(document.Id, number, description)
+            DocumentUpdatedEvent.Create(document.Id.Value, number, description)
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));
         
 
         public static Validation<Error, (Document Document, DocumentApprovedEvent Event)> Approve(
             this Document document, string comment) =>
-            DocumentApprovedEvent.Create(document.Id, comment)
+            DocumentApprovedEvent.Create(document.Id.Value, comment)
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));
 
         public static Validation<Error, (Document Document, DocumentRejectedEvent Event)> Reject(this Document document,
             string reason) =>
-            DocumentRejectedEvent.Create(document.Id, reason)
+            DocumentRejectedEvent.Create(document.Id.Value, reason)
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));
 
         public static Validation<Error, (Document Document, FileAddedEvent Event)> AddFile(this Document document,
             string fileName, string fileDescription) =>
-            FileAddedEvent.Create(document.Id, fileName, fileDescription)
+            FileAddedEvent.Create(document.Id.Value, fileName, fileDescription)
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));
 

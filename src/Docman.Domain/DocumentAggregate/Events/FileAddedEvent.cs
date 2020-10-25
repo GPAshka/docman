@@ -17,11 +17,11 @@ namespace Docman.Domain.DocumentAggregate.Events
             Description = description;
         }
 
-        public static Validation<Error, FileAddedEvent> Create(DocumentId documentId, string fileName, string fileDescription)
+        public static Validation<Error, FileAddedEvent> Create(Guid documentId, string fileName, string fileDescription)
             => FileName.Create(fileName)
                 .Bind(name => FileDescription.Create(fileDescription)
                     .Map(desc =>
-                        new FileAddedEvent(documentId, Guid.NewGuid(), name, desc, DateTime.UtcNow)));
+                        new FileAddedEvent(new DocumentId(documentId), Guid.NewGuid(), name, desc, DateTime.UtcNow)));
 
     }
 }

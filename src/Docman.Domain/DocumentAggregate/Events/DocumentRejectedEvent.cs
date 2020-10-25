@@ -13,8 +13,8 @@ namespace Docman.Domain.DocumentAggregate.Events
             Reason = reason;
         }
 
-        public static Validation<Error, DocumentRejectedEvent> Create(DocumentId documentId, string reason) =>
+        public static Validation<Error, DocumentRejectedEvent> Create(Guid documentId, string reason) =>
             RejectReason.Create(reason)
-                    .Map(r => new DocumentRejectedEvent(documentId, r, DateTime.UtcNow));
+                    .Map(r => new DocumentRejectedEvent(new DocumentId(documentId), r, DateTime.UtcNow));
     }
 }

@@ -13,8 +13,8 @@ namespace Docman.Domain.DocumentAggregate.Events
             Comment = comment;
         }
 
-        public static Validation<Error, DocumentApprovedEvent> Create(DocumentId documentId, string comment) =>
+        public static Validation<Error, DocumentApprovedEvent> Create(Guid documentId, string comment) =>
             Comment.Create(comment)
-                .Map(c => new DocumentApprovedEvent(documentId, c, DateTime.UtcNow));
+                .Map(c => new DocumentApprovedEvent(new DocumentId(documentId), c, DateTime.UtcNow));
     }
 }

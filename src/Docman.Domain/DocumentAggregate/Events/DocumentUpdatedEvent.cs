@@ -15,10 +15,10 @@ namespace Docman.Domain.DocumentAggregate.Events
             Description = description;
         }
 
-        public static Validation<Error, DocumentUpdatedEvent> Create(DocumentId documentId, string number,
+        public static Validation<Error, DocumentUpdatedEvent> Create(Guid documentId, string number,
             string description) =>
             DocumentNumber.Create(number)
                 .Bind(num => DocumentDescription.Create(description)
-                    .Map(desc => new DocumentUpdatedEvent(documentId, num, desc, DateTime.UtcNow)));
+                    .Map(desc => new DocumentUpdatedEvent(new DocumentId(documentId), num, desc, DateTime.UtcNow)));
     }
 }
