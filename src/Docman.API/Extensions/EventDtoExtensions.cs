@@ -18,6 +18,7 @@ namespace Docman.API.Extensions
                 FileAddedEvent fileAddedEvent => fileAddedEvent.ToDto(),
                 DocumentSentForApprovalEvent sentForApprovalEvent => sentForApprovalEvent.ToDto(),
                 DocumentRejectedEvent documentRejectedEvent => documentRejectedEvent.ToDto(),
+                DocumentUpdatedEvent documentUpdatedEvent => documentUpdatedEvent.ToDto(),
                 _ => throw new ArgumentOutOfRangeException(nameof(@event))    //TODO
             };
 
@@ -63,6 +64,15 @@ namespace Docman.API.Extensions
                 TimeStamp = @event.TimeStamp
             };
 
+        private static DocumentUpdatedEventDto ToDto(this DocumentUpdatedEvent @event) =>
+            new DocumentUpdatedEventDto
+            {
+                Id = @event.EntityId,
+                Number = @event.Number.Value,
+                Description = @event.Description.Match(d => d.Value, string.Empty),
+                TimeStamp = @event.TimeStamp
+            };
+
         public static Validation<Error, Event> ToEvent(this DocumentCreatedEventDto dto) =>
             DocumentNumber.Create(dto.Number)
                 .Bind(num => DocumentDescription.Create(dto.Description)
@@ -85,5 +95,10 @@ namespace Docman.API.Extensions
         public static Validation<Error, Event> ToEvent(this DocumentRejectedEventDto dto) =>
             RejectReason.Create(dto.Reason)
                 .Map(reason => (Event) new DocumentRejectedEvent(new DocumentId(dto.Id), reason, dto.TimeStamp));
+
+        public static Validation<Error, Event> ToEvent(this DocumentUpdatedEventDto dto) =>
+            DocumentNumber.Create(dto.Number)
+                .Bind(num => DocumentDescription.Create(dto.Description)
+                    .Map(desc => (Event) new DocumentUpdatedEvent(new DocumentId(dto.Id), num, desc, dto.TimeStamp)));
     }
 }

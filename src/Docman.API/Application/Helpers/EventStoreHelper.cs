@@ -5,6 +5,7 @@ using Docman.API.Application.Dto;
 using Docman.API.Application.Dto.Events;
 using Docman.API.Extensions;
 using Docman.Domain;
+using Docman.Domain.DocumentAggregate.Events;
 using Docman.Infrastructure.EventStore;
 using LanguageExt;
 
@@ -29,6 +30,7 @@ namespace Docman.API.Application.Helpers
                         FileAddedEventDto fileAddedEventDto => fileAddedEventDto.ToEvent(),
                         DocumentSentForApprovalEventDto sentForApprovalEventDto => sentForApprovalEventDto.ToEvent(),
                         DocumentRejectedEventDto rejectedEventDto => rejectedEventDto.ToEvent(),
+                        DocumentUpdatedEventDto updatedEventDto => updatedEventDto.ToEvent(),
                         _ => new Error($"Unknown event DTO type: {dto.GetType().Name}")
                     });
                 return events.Traverse(x => x);
