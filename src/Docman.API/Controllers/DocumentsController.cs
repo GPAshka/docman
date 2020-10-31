@@ -6,13 +6,13 @@ using Docman.API.Application.Helpers;
 using Docman.API.Application.Responses;
 using Docman.API.Extensions;
 using Docman.Domain;
-using Docman.Domain.DocumentAggregate;
 using Docman.Domain.DocumentAggregate.Errors;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static LanguageExt.Prelude;
+using Document = Docman.Domain.DocumentAggregate.Document;
 
 namespace Docman.API.Controllers
 {
@@ -23,8 +23,9 @@ namespace Docman.API.Controllers
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
         private readonly Action<Event> SaveAndPublishEvent;
         private readonly DocumentRepository.DocumentExistsByNumber DocumentExistsByNumber;
+        private readonly DocumentRepository.GetDocumentById _getDocumentById;
 
-        private Func<Guid, Task<Validation<Error, Document>>> GetDocument => id =>
+        private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents => id =>
             ReadEvents(id)
                 .BindT(events => DocumentHelper.From(events, id));
 
@@ -47,21 +48,28 @@ namespace Docman.API.Controllers
             };
 
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublishEvent, DocumentRepository.DocumentExistsByNumber documentExistsByNumber)
+            Action<Event> saveAndPublishEvent, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
+            DocumentRepository.GetDocumentById getDocumentById)
         {
             SaveAndPublishEvent = saveAndPublishEvent;
             ReadEvents = readEvents;
             DocumentExistsByNumber = documentExistsByNumber;
+            _getDocumentById = getDocumentById;
         }
 
         [HttpGet]
         [Route("{documentId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult Get(Guid documentId)
+        public async Task<IActionResult> Get(Guid documentId)
         {
-            return Ok();
+            return await _getDocumentById(documentId)
+                .MapT(DocumentHelper.GenerateDocumentResponse)
+                .Map(document =>
+                    document.Match<IActionResult>(
+                        Some: Ok,
+                        None: NotFound()));
         }
-        
+
         [HttpGet]
         [Route("{documentId:guid}/files/{fileId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -111,7 +119,7 @@ namespace Docman.API.Controllers
         public async Task<IActionResult> UpdateDocument(Guid id, [FromBody] UpdateDocumentCommand command)
         {
             return await ValidateUpdateCommand(command)
-                .BindT(c => GetDocument(id)
+                .BindT(c => GetDocumentFromEvents(id)
                     .BindT(d => d.Update(c.Number, c.Description)))
                 .Do(val =>
                     val.Do(res => SaveAndPublishEvent(res.Event)))
@@ -126,7 +134,7 @@ namespace Docman.API.Controllers
         [Route("{id:guid}/approve")]
         public async Task<IActionResult> ApproveDocument(Guid id, [FromBody] ApproveDocumentCommand command)
         {
-            return await GetDocument(id)
+            return await GetDocumentFromEvents(id)
                 .BindT(d => d.Approve(command.Comment))
                 .Do(val => 
                     val.Do(res => SaveAndPublishEvent(res.Event)))
@@ -141,7 +149,7 @@ namespace Docman.API.Controllers
         [Route("{id:guid}/reject")]
         public async Task<IActionResult> RejectDocument(Guid id, [FromBody] RejectDocumentCommand command)
         {
-            return await GetDocument(id)
+            return await GetDocumentFromEvents(id)
                 .BindT(d => d.Reject(command.Reason))
                 .Do(val => 
                     val.Do(res => SaveAndPublishEvent(res.Event)))
@@ -156,7 +164,7 @@ namespace Docman.API.Controllers
         [Route("{id:guid}/send-for-approval")]
         public async Task<IActionResult> SendDocumentForApproval(Guid id)
         {
-            return await GetDocument(id)
+            return await GetDocumentFromEvents(id)
                 .BindT(d => d.SendForApproval())
                 .Do(val => val
                     .Do(res => SaveAndPublishEvent(res.Event)))
@@ -171,7 +179,7 @@ namespace Docman.API.Controllers
         [Route("{id:guid}/files")]
         public async Task<IActionResult> AddFile(Guid id, [FromBody] AddFileCommand command)
         {
-            return await GetDocument(id)
+            return await GetDocumentFromEvents(id)
                 .BindT(d => d.AddFile(command.FileName, command.FileDescription))
                 .Do(val =>
                     val.Do(res => SaveAndPublishEvent(res.Event)))

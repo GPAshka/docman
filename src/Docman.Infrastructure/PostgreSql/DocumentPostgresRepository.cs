@@ -3,7 +3,10 @@ using System.Data;
 using System.Threading.Tasks;
 using Dapper;
 using Docman.Domain.DocumentAggregate;
+using Docman.Infrastructure.Dto;
+using LanguageExt;
 using Npgsql;
+using static LanguageExt.Prelude;
 
 namespace Docman.Infrastructure.PostgreSql
 {
@@ -49,6 +52,22 @@ namespace Docman.Infrastructure.PostgreSql
                 var exists = await connection.ExecuteScalarAsync<bool>(query, new { Number = number });
 
                 return exists;
+            };
+
+        public static Func<string, Guid, Task<Option<DocumentDatabaseDto>>> GetDocumentByIdAsync =>
+            async (connectionString, documentId) =>
+            {
+                const string query =
+                    "SELECT \"Id\", \"Number\", \"Description\", \"Status\", \"ApprovalComment\", \"RejectReason\", \"DateCreated\" FROM documents.\"Documents\" WHERE \"Id\" = @Id";
+                
+                using IDbConnection connection = new NpgsqlConnection(connectionString);
+                var document =
+                    await connection.QuerySingleOrDefaultAsync<DocumentDatabaseDto>(query, new { Id = documentId });
+
+                if (document == null)
+                    return None;
+
+                return document;
             };
     }
 }

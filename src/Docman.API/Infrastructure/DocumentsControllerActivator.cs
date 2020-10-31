@@ -51,9 +51,11 @@ namespace Docman.API.Infrastructure
 
             var documentExistsByNumber = par(DocumentPostgresRepository.DocumentExistsByNumberAsync,
                 postgresConnectionString);
+            var getDocument = par(DocumentPostgresRepository.GetDocumentByIdAsync, postgresConnectionString);
 
             return new DocumentsController(readEvents, saveAndPublish,
-                new DocumentRepository.DocumentExistsByNumber(documentExistsByNumber));
+                new DocumentRepository.DocumentExistsByNumber(documentExistsByNumber),
+                new DocumentRepository.GetDocumentById(getDocument));
         }
     }
 }

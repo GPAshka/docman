@@ -1,8 +1,8 @@
 using System;
 
-namespace Docman.Infrastructure.Dto
+namespace Docman.API.Application.Responses
 {
-    public class DocumentDatabaseDto
+    public class Document
     {
         public Guid Id { get; set; }
         public string Number { get; set; }
@@ -10,6 +10,5 @@ namespace Docman.Infrastructure.Dto
         public string Status { get; set; }
         public string? ApprovalComment { get; set; }
         public string? RejectReason { get; set; }
-        public DateTime DateCreated { get; set; }
     }
 }

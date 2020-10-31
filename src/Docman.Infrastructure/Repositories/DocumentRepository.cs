@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using Docman.Infrastructure.Dto;
+using LanguageExt;
 
 namespace Docman.Infrastructure.Repositories
 {
@@ -10,5 +12,7 @@ namespace Docman.Infrastructure.Repositories
         public delegate Task UpdateDocument(Guid documentId, string number, string description);
 
         public delegate Task<bool> DocumentExistsByNumber(string number);
+
+        public delegate Task<Option<DocumentDatabaseDto>> GetDocumentById(Guid documentId);
     }
 }
