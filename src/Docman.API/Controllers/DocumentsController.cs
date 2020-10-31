@@ -87,7 +87,7 @@ namespace Docman.API.Controllers
             return await ReadEvents(documentId)
                 .MapT(events => events.Match(
                     Empty: () => None,
-                    More: otherEvents => Some(DocumentHistory.EventsToDocumentHistory(otherEvents))))
+                    More: otherEvents => Some(DocumentHelper.EventsToDocumentHistory(otherEvents))))
                 .Map(val => val.Match(
                     Fail: errors => BadRequest(string.Join(",", errors)),
                     Succ: res => res.Match<IActionResult>(
