@@ -100,11 +100,8 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateDocument([FromBody] CreateDocumentCommand command)
         {
-            if (command.Id == Guid.Empty)
-                command = command.WithId(Guid.NewGuid());
-
             return await ValidateCreateCommand(command)
-                .BindT(c => c.ToEvent())
+                .BindT(c => c.ToEvent(Guid.NewGuid()))
                 .Do(val =>
                     val.Do(e => SaveAndPublishEvent(e)))
                 .Map(val => val.Match<IActionResult>(

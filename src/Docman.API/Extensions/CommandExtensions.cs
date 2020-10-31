@@ -1,3 +1,4 @@
+using System;
 using Docman.API.Application.Commands;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
@@ -8,9 +9,9 @@ namespace Docman.API.Extensions
 {
     public static class CommandExtensions
     {
-        public static Validation<Error, Event> ToEvent(this CreateDocumentCommand command) =>
+        public static Validation<Error, Event> ToEvent(this CreateDocumentCommand command, Guid documentId) =>
             DocumentNumber.Create(command.Number)
                 .Bind(num => DocumentDescription.Create(command.Description)
-                    .Map(desc => (Event) new DocumentCreatedEvent(new DocumentId(command.Id), num, desc)));
+                    .Map(desc => (Event) new DocumentCreatedEvent(new DocumentId(documentId), num, desc)));
     }
 }

@@ -4,17 +4,13 @@ namespace Docman.API.Application.Commands
 {
     public class CreateDocumentCommand
     {
-        public Guid Id { get; }
         public string Number { get; }
         public string Description { get; }
 
-        public CreateDocumentCommand(Guid id, string number, string description)
+        public CreateDocumentCommand(string number, string description)
         {
-            Id = id;
             Number = number;
             Description = description;
         }
-
-        public CreateDocumentCommand WithId(Guid id) => new CreateDocumentCommand(id, Number, Description);
     }
 }
