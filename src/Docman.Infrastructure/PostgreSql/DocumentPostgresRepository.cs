@@ -32,7 +32,7 @@ namespace Docman.Infrastructure.PostgreSql
             async (connectionString, documentId, number, description) =>
             {
                 const string query =
-                    "UPDATE documents.\"Documents\" SET \"Number\" = @Number, \"Description\" = @Description WHERE \"Id\" = @Id)";
+                    "UPDATE documents.\"Documents\" SET \"Number\" = @Number, \"Description\" = @Description WHERE \"Id\" = @Id";
                 
                 using IDbConnection connection = new NpgsqlConnection(connectionString);
                 await connection.ExecuteAsync(query, new

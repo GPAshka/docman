@@ -27,27 +27,66 @@ namespace Docman.IntegrationTests
             var number = DateTime.UtcNow.Ticks.ToString();
             const string description = "test document";
             
-            var createDocumentCommand = new CreateDocumentCommand(number, description);
-            var createDocumentJson = JsonConvert.SerializeObject(createDocumentCommand);
-            var content = new StringContent(createDocumentJson, Encoding.UTF8, "application/json");
-            
             // Act
-            var createResponse = await _client.PostAsync("/documents", content);
+            var documentUri = await CreateDocumentAsync(number, description);
+            var document = await GetDocumentAsync(documentUri);
             
             // Assert
-            createResponse.EnsureSuccessStatusCode();
-            Assert.NotNull(createResponse.Headers.Location);
-
-            var getResponse = await _client.GetAsync(createResponse.Headers.Location);
-            getResponse.EnsureSuccessStatusCode();
-
-            var getDocumentJson = await getResponse.Content.ReadAsStringAsync();
-            var document = JsonConvert.DeserializeObject<Document>(getDocumentJson);
-            
             Assert.NotNull(document);
             Assert.Equal(number, document.Number);
             Assert.Equal(description, document.Description);
             Assert.Equal(DocumentStatus.Draft.ToString(), document.Status);
+        }
+
+        [Fact]
+        public async Task UpdateDocumentTest()
+        {
+            // Arrange
+            const string description = "test document";
+            var number = DateTime.UtcNow.Ticks.ToString();
+            
+            var updateDocumentCommand = new UpdateDocumentCommand($"{number}-update", $"{description}-update");
+            var content = GetStringContent(updateDocumentCommand);
+            
+            // Act
+            var documentUri = await CreateDocumentAsync(number, description);
+            var documentUpdateResult = await _client.PutAsync(documentUri, content);
+            var document = await GetDocumentAsync(documentUri);
+            
+            // Assert
+            documentUpdateResult.EnsureSuccessStatusCode();
+            Assert.NotNull(document);
+            Assert.Equal(updateDocumentCommand.Number, document.Number);
+            Assert.Equal(updateDocumentCommand.Description, document.Description);
+            Assert.Equal(DocumentStatus.Draft.ToString(), document.Status);
+        }
+
+        private async Task<Uri> CreateDocumentAsync(string number, string description)
+        {
+            var createDocumentCommand = new CreateDocumentCommand(number, description);
+            var content = GetStringContent(createDocumentCommand);
+
+            var createResponse = await _client.PostAsync("/documents", content);
+            
+            createResponse.EnsureSuccessStatusCode();
+            Assert.NotNull(createResponse.Headers.Location);
+
+            return createResponse.Headers.Location;
+        }
+
+        private async Task<Document> GetDocumentAsync(Uri documentUri)
+        {
+            var getResponse = await _client.GetAsync(documentUri);
+            getResponse.EnsureSuccessStatusCode();
+
+            var getDocumentJson = await getResponse.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<Document>(getDocumentJson);
+        }
+
+        private static StringContent GetStringContent(object command)
+        {
+            var json = JsonConvert.SerializeObject(command);
+            return new StringContent(json, Encoding.UTF8, "application/json");
         }
     }
 }
