@@ -46,8 +46,8 @@ namespace Docman.API.Infrastructure
             var readEvents = par(EventStoreHelper.ReadEvents, eventStoreConnectionString);
             var saveEvent = par(EventStoreHelper.SaveEvent, eventStoreConnectionString);
             
-            var saveAndPublish = par(HelperFunctions.SaveAndPublish, dto => mediator.Publish(dto),
-                dto => saveEvent(dto));
+            var saveAndPublish = par(HelperFunctions.SaveAndPublish, dto => saveEvent(dto),
+                dto => mediator.Publish(dto));
 
             var documentExistsByNumber = par(DocumentPostgresRepository.DocumentExistsByNumberAsync,
                 postgresConnectionString);

@@ -5,7 +5,6 @@ using Docman.API.Application.Dto;
 using Docman.API.Application.Dto.Events;
 using Docman.API.Extensions;
 using Docman.Domain;
-using Docman.Domain.DocumentAggregate.Events;
 using Docman.Infrastructure.EventStore;
 using LanguageExt;
 
