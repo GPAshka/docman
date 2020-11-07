@@ -5,6 +5,7 @@ using Docman.API.Application.Commands;
 using Docman.API.Application.Helpers;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
+using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,12 +18,14 @@ namespace Docman.API.Controllers
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
         private readonly Action<Event> SaveAndPublishEvent;
+        private readonly DocumentRepository.GetFileById GetFileById;
 
         public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublishEvent)
+            Action<Event> saveAndPublishEvent, DocumentRepository.GetFileById getFileById)
         {
             ReadEvents = readEvents;
             SaveAndPublishEvent = saveAndPublishEvent;
+            GetFileById = getFileById;
         }
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
@@ -31,23 +34,29 @@ namespace Docman.API.Controllers
         [HttpGet]
         [Route("{fileId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetFile(Guid documentId, Guid fileId)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetFile(Guid documentId, Guid fileId)
         {
-            return Ok();
+            return await GetFileById(fileId)
+                .MapT(ResponseHelper.GenerateFileResponse)
+                .Map(document =>
+                    document.Match<IActionResult>(
+                        Some: Ok,
+                        None: NotFound()));
         }
         
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> AddFile(Guid id, [FromBody] AddFileCommand command)
+        public async Task<IActionResult> AddFile(Guid documentId, [FromBody] AddFileCommand command)
         {
-            return await GetDocumentFromEvents(id)
+            return await GetDocumentFromEvents(documentId)
                 .BindT(d => d.AddFile(command.FileName, command.FileDescription))
                 .Do(val =>
                     val.Do(res => SaveAndPublishEvent(res.Event)))
                 .Map(val => val.Match<IActionResult>(
                     Succ: res =>
-                        Created($"documents/{id}/files/{res.Event?.FileId.ToString()}", null),
+                        Created($"documents/{documentId}/files/{res.Event?.FileId.ToString()}", null),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
     }

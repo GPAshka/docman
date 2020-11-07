@@ -98,5 +98,20 @@ namespace Docman.Infrastructure.PostgreSql
                     Description = description
                 });
             };
+        
+        public static Func<string, Guid, Task<Option<FileDatabaseDto>>> GetFileByIdAsync =>
+            async (connectionString, fileId) =>
+            {
+                const string query =
+                    "SELECT \"Id\", \"DocumentId\", \"Name\", \"Description\" FROM documents.\"Files\" WHERE \"Id\" = @Id";
+                
+                using IDbConnection connection = new NpgsqlConnection(connectionString);
+                var file = await connection.QuerySingleOrDefaultAsync<FileDatabaseDto>(query, new { Id = fileId });
+
+                if (file == null)
+                    return None;
+
+                return file;
+            };
     }
 }

@@ -15,13 +15,18 @@ namespace Docman.API.Infrastructure
 {
     public class DocumentsControllerActivator : IControllerActivator
     {
-        private readonly IConfiguration _configuration;
         private readonly IServiceProvider _serviceProvider;
+
+        private readonly string _eventStoreConnectionString;
+        private readonly string _postgresConnectionString;
         
         public DocumentsControllerActivator(IConfiguration configuration, IServiceProvider serviceProvider)
         {
-            _configuration = configuration;
             _serviceProvider = serviceProvider;
+            
+            //TODO catch exceptions while reading configuration
+            _eventStoreConnectionString = configuration["EventStoreConnectionString"];
+            _postgresConnectionString = configuration["PostgreSqlConnectionString"];
         }
         
         public object Create(ControllerContext context)
@@ -44,16 +49,12 @@ namespace Docman.API.Infrastructure
 
         private DocumentsController NewDocumentsController()
         {
-            //TODO catch exceptions while reading configuration
-            var eventStoreConnectionString = _configuration["EventStoreConnectionString"];
-            var postgresConnectionString = _configuration["PostgreSqlConnectionString"];
-
-            var readEvents = par(EventStoreHelper.ReadEvents, eventStoreConnectionString);
+            var readEvents = par(EventStoreHelper.ReadEvents, _eventStoreConnectionString);
             var saveAndPublish = ConstructSaveAndPublishEventFunc();
 
             var documentExistsByNumber = par(DocumentPostgresRepository.DocumentExistsByNumberAsync,
-                postgresConnectionString);
-            var getDocument = par(DocumentPostgresRepository.GetDocumentByIdAsync, postgresConnectionString);
+                _postgresConnectionString);
+            var getDocument = par(DocumentPostgresRepository.GetDocumentByIdAsync, _postgresConnectionString);
 
             return new DocumentsController(readEvents, saveAndPublish,
                 new DocumentRepository.DocumentExistsByNumber(documentExistsByNumber),
@@ -62,24 +63,21 @@ namespace Docman.API.Infrastructure
 
         private DocumentFilesController NewDocumentFilesController()
         {
-            var eventStoreConnectionString = _configuration["EventStoreConnectionString"];
-            
-            var readEvents = par(EventStoreHelper.ReadEvents, eventStoreConnectionString);
+            var readEvents = par(EventStoreHelper.ReadEvents, _eventStoreConnectionString);
             var saveAndPublish = ConstructSaveAndPublishEventFunc();
 
-            return new DocumentFilesController(readEvents, saveAndPublish);
+            var getFile = par(DocumentPostgresRepository.GetFileByIdAsync, _postgresConnectionString);
+
+            return new DocumentFilesController(readEvents, saveAndPublish, new DocumentRepository.GetFileById(getFile));
         }
 
         private Action<Event> ConstructSaveAndPublishEventFunc()
         {
-            var eventStoreConnectionString = _configuration["EventStoreConnectionString"];
             var mediator = _serviceProvider.GetRequiredService<IMediator>();
             
-            var saveEvent = par(EventStoreHelper.SaveEvent, eventStoreConnectionString);
-            
-            var saveAndPublish = par(HelperFunctions.SaveAndPublish, dto => saveEvent(dto),
+            var saveEvent = par(EventStoreHelper.SaveEvent, _eventStoreConnectionString);
+            return par(HelperFunctions.SaveAndPublish, dto => saveEvent(dto),
                 dto => mediator.Publish(dto));
-            return saveAndPublish;
         }
     }
 }

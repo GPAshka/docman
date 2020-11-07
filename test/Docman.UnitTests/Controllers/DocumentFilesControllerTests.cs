@@ -2,18 +2,64 @@ using System;
 using System.Threading.Tasks;
 using Docman.API.Application.Commands;
 using Docman.API.Application.Dto.Events;
+using Docman.API.Application.Responses;
 using Docman.API.Controllers;
 using Docman.API.Extensions;
 using Docman.Domain;
+using Docman.Infrastructure.Dto;
+using Docman.Infrastructure.Repositories;
+using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
+using static LanguageExt.Prelude;
 
 namespace Docman.UnitTests.Controllers
 {
     public class DocumentFilesControllerTests
     {
         private DocumentFilesController _documentFilesController;
+        
         private static void SaveAndPublish(Event evt) { }
+        
+        private static DocumentRepository.GetFileById GetFileById =>
+            fileId => Task.FromResult(Some(new FileDatabaseDto { Id = fileId }));
+        
+        [Fact]
+        public async Task TestGetFileOkResult()
+        {
+            //Arrange
+            var fileId = Guid.NewGuid();
+            _documentFilesController =
+                new DocumentFilesController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, GetFileById);
+
+            // Act
+            var actionResult = await _documentFilesController.GetFile(Guid.Empty, fileId);
+            
+            // Assert
+            var okResult = actionResult as OkObjectResult;
+            var file = okResult?.Value as File;
+            
+            Assert.NotNull(okResult);
+            Assert.NotNull(file);
+            Assert.Equal(fileId, file.Id);
+        }
+        
+        [Fact]
+        public async Task TestGetFileNotFoundResult()
+        {
+            //Arrange
+            var fileId = Guid.NewGuid();
+            var getFileById = new DocumentRepository.GetFileById(id => Task.FromResult(Option<FileDatabaseDto>.None));
+            _documentFilesController =
+                new DocumentFilesController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, getFileById);
+
+            // Act
+            var actionResult = await _documentFilesController.GetFile(Guid.Empty, fileId);
+            
+            // Assert
+            var notFoundResult = actionResult as NotFoundResult;
+            Assert.NotNull(notFoundResult);
+        }
         
         [Fact]
         public async Task TestAddFileCreatedResult()
@@ -25,7 +71,7 @@ namespace Docman.UnitTests.Controllers
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
-            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish);
+            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish, GetFileById);
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -45,7 +91,7 @@ namespace Docman.UnitTests.Controllers
             var command = new AddFileCommand("test", "description");
 
             _documentFilesController =
-                new DocumentFilesController(Helper.ReadEventsFuncWithError(error), SaveAndPublish);
+                new DocumentFilesController(Helper.ReadEventsFuncWithError(error), SaveAndPublish, GetFileById);
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -66,7 +112,7 @@ namespace Docman.UnitTests.Controllers
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
-            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish);
+            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish, GetFileById);
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -93,7 +139,7 @@ namespace Docman.UnitTests.Controllers
             var readEventsFunc =
                 Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
 
-            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish);
+            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish, GetFileById);
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);

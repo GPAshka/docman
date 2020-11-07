@@ -21,6 +21,15 @@ namespace Docman.API.Application.Helpers
             RejectReason = documentDatabaseDto.RejectReason,
         };
 
+        public static Responses.File GenerateFileResponse(FileDatabaseDto fileDatabaseDto) =>
+            new Responses.File
+            {
+                Id = fileDatabaseDto.Id,
+                DocumentId = fileDatabaseDto.DocumentId,
+                Name = fileDatabaseDto.Name,
+                Description = fileDatabaseDto.Description
+            };
+
         public static IEnumerable<DocumentHistory> EventsToDocumentHistory(IEnumerable<Event> events) =>
             events
                 .Select(ToDocumentHistory)
