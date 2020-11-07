@@ -63,7 +63,7 @@ namespace Docman.API.Controllers
         public async Task<IActionResult> Get(Guid documentId)
         {
             return await _getDocumentById(documentId)
-                .MapT(DocumentHelper.GenerateDocumentResponse)
+                .MapT(ResponseHelper.GenerateDocumentResponse)
                 .Map(document =>
                     document.Match<IActionResult>(
                         Some: Ok,
@@ -87,7 +87,7 @@ namespace Docman.API.Controllers
             return await ReadEvents(documentId)
                 .MapT(events => events.Match(
                     Empty: () => None,
-                    More: otherEvents => Some(DocumentHelper.EventsToDocumentHistory(otherEvents))))
+                    More: otherEvents => Some(ResponseHelper.EventsToDocumentHistory(otherEvents))))
                 .Map(val => val.Match(
                     Fail: errors => BadRequest(string.Join(",", errors)),
                     Succ: res => res.Match<IActionResult>(
