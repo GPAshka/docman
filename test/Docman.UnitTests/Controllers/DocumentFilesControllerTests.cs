@@ -88,8 +88,7 @@ namespace Docman.UnitTests.Controllers
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var fileAddedDto = new FileAddedEventDto
             {
-                Id = Guid.Empty, FileId = Guid.Empty.ToString(), FileName = "test",
-                TimeStamp = DateTime.UtcNow
+                Id = Guid.Empty, FileId = Guid.Empty, FileName = "test", TimeStamp = DateTime.UtcNow
             };
             var readEventsFunc =
                 Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());

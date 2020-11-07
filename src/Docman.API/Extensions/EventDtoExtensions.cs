@@ -43,7 +43,7 @@ namespace Docman.API.Extensions
             new FileAddedEventDto
             {
                 Id = @event.EntityId,
-                FileId = @event.FileId.ToString(),
+                FileId = @event.FileId,
                 FileName = @event.Name.Value,
                 FileDescription = @event.Description.Match(d => d.Value, string.Empty),
                 TimeStamp = @event.TimeStamp
@@ -86,7 +86,7 @@ namespace Docman.API.Extensions
             FileName.Create(dto.FileName)
                 .Bind(name => FileDescription.Create(dto.FileDescription)
                     .Map(desc =>
-                        (Event) new FileAddedEvent(new DocumentId(dto.Id), Guid.Parse(dto.FileId), name, desc,
+                        (Event) new FileAddedEvent(new DocumentId(dto.Id), dto.FileId, name, desc,
                             dto.TimeStamp)));
 
         public static Validation<Error, Event> ToEvent(this DocumentSentForApprovalEventDto dto) =>
