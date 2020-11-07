@@ -25,9 +25,8 @@ namespace Docman.API.Controllers
         private readonly DocumentRepository.DocumentExistsByNumber DocumentExistsByNumber;
         private readonly DocumentRepository.GetDocumentById _getDocumentById;
 
-        private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents => id =>
-            ReadEvents(id)
-                .BindT(events => DocumentHelper.From(events, id));
+        private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
+            id => HelperFunctions.GetDocumentFromEvents(ReadEvents, id);
 
         private Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> ValidateCreateCommand =>
             async createCommand =>
@@ -68,14 +67,6 @@ namespace Docman.API.Controllers
                     document.Match<IActionResult>(
                         Some: Ok,
                         None: NotFound()));
-        }
-
-        [HttpGet]
-        [Route("{documentId:guid}/files/{fileId:guid}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetFile(Guid documentId, Guid fileId)
-        {
-            return Ok();
         }
 
         [HttpGet]
@@ -167,22 +158,6 @@ namespace Docman.API.Controllers
                     .Do(res => SaveAndPublishEvent(res.Event)))
                 .Map(val => val.Match<IActionResult>(
                     Succ: _ => NoContent(),
-                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
-        }
-
-        [HttpPost]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Route("{id:guid}/files")]
-        public async Task<IActionResult> AddFile(Guid id, [FromBody] AddFileCommand command)
-        {
-            return await GetDocumentFromEvents(id)
-                .BindT(d => d.AddFile(command.FileName, command.FileDescription))
-                .Do(val =>
-                    val.Do(res => SaveAndPublishEvent(res.Event)))
-                .Map(val => val.Match<IActionResult>(
-                    Succ: res =>
-                        Created($"documents/{id}/files/{res.Event?.FileId.ToString()}", null),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
     }

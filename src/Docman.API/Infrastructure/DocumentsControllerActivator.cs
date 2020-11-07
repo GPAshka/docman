@@ -1,6 +1,7 @@
 using System;
 using Docman.API.Application.Helpers;
 using Docman.API.Controllers;
+using Docman.Domain;
 using Docman.Infrastructure.PostgreSql;
 using Docman.Infrastructure.Repositories;
 using MediatR;
@@ -26,7 +27,13 @@ namespace Docman.API.Infrastructure
         public object Create(ControllerContext context)
         {
             var type = context.ActionDescriptor.ControllerTypeInfo.AsType();
-            return type == typeof(DocumentsController) ? NewDocumentsController() : Activator.CreateInstance(type);
+
+            if (type == typeof(DocumentsController))
+                return NewDocumentsController();
+            
+            return type == typeof(DocumentFilesController)
+                ? NewDocumentFilesController()
+                : Activator.CreateInstance(type);
         }
 
         public void Release(ControllerContext context, object controller)
@@ -40,14 +47,9 @@ namespace Docman.API.Infrastructure
             //TODO catch exceptions while reading configuration
             var eventStoreConnectionString = _configuration["EventStoreConnectionString"];
             var postgresConnectionString = _configuration["PostgreSqlConnectionString"];
-            
-            var mediator = _serviceProvider.GetRequiredService<IMediator>();
-            
+
             var readEvents = par(EventStoreHelper.ReadEvents, eventStoreConnectionString);
-            var saveEvent = par(EventStoreHelper.SaveEvent, eventStoreConnectionString);
-            
-            var saveAndPublish = par(HelperFunctions.SaveAndPublish, dto => saveEvent(dto),
-                dto => mediator.Publish(dto));
+            var saveAndPublish = ConstructSaveAndPublishEventFunc();
 
             var documentExistsByNumber = par(DocumentPostgresRepository.DocumentExistsByNumberAsync,
                 postgresConnectionString);
@@ -56,6 +58,28 @@ namespace Docman.API.Infrastructure
             return new DocumentsController(readEvents, saveAndPublish,
                 new DocumentRepository.DocumentExistsByNumber(documentExistsByNumber),
                 new DocumentRepository.GetDocumentById(getDocument));
+        }
+
+        private DocumentFilesController NewDocumentFilesController()
+        {
+            var eventStoreConnectionString = _configuration["EventStoreConnectionString"];
+            
+            var readEvents = par(EventStoreHelper.ReadEvents, eventStoreConnectionString);
+            var saveAndPublish = ConstructSaveAndPublishEventFunc();
+
+            return new DocumentFilesController(readEvents, saveAndPublish);
+        }
+
+        private Action<Event> ConstructSaveAndPublishEventFunc()
+        {
+            var eventStoreConnectionString = _configuration["EventStoreConnectionString"];
+            var mediator = _serviceProvider.GetRequiredService<IMediator>();
+            
+            var saveEvent = par(EventStoreHelper.SaveEvent, eventStoreConnectionString);
+            
+            var saveAndPublish = par(HelperFunctions.SaveAndPublish, dto => saveEvent(dto),
+                dto => mediator.Publish(dto));
+            return saveAndPublish;
         }
     }
 }

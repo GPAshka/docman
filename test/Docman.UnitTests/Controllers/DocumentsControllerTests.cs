@@ -6,7 +6,6 @@ using Docman.API.Application.Dto.Events;
 using Docman.API.Application.Responses;
 using Docman.API.Controllers;
 using Docman.API.Extensions;
-using Docman.Domain;
 using Docman.Infrastructure.Dto;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
@@ -16,16 +15,9 @@ using static LanguageExt.Prelude;
 
 namespace Docman.UnitTests.Controllers
 {
-    public class DocumentControllerTests
+    public class DocumentsControllerTests
     {
         private DocumentsController _documentsController;
-        private static void SaveAndPublish(Event evt) { }
-
-        private static Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ValidReadEventsFunc(
-            params Validation<Error, Event>[] events) => id => Task.FromResult(events.Traverse(x => x));
-        
-        private static Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEventsFuncWithError(string error) =>
-            id => Task.FromResult(Validation<Error, IEnumerable<Event>>.Fail(new Seq<Error> { new Error(error) }));
 
         private static DocumentRepository.DocumentExistsByNumber DocumentExistsByNumber =>
             number => Task.FromResult(false);
@@ -39,7 +31,7 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var documentId = Guid.NewGuid();
             _documentsController =
-                new DocumentsController(ValidReadEventsFunc(), SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
 
             // Act
             var actionResult = await _documentsController.Get(documentId);
@@ -61,7 +53,7 @@ namespace Docman.UnitTests.Controllers
             var getDocumentById =
                 new DocumentRepository.GetDocumentById(id => Task.FromResult(Option<DocumentDatabaseDto>.None));
             _documentsController = 
-                new DocumentsController(ValidReadEventsFunc(), SaveAndPublish, DocumentExistsByNumber, getDocumentById);
+                new DocumentsController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, DocumentExistsByNumber, getDocumentById);
 
             // Act
             var actionResult = await _documentsController.Get(documentId);
@@ -78,10 +70,10 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var actionResult = await _documentsController.GetDocumentHistory(Guid.Empty);
@@ -99,7 +91,7 @@ namespace Docman.UnitTests.Controllers
         public async Task TestGetDocumentHistoryNotFoundResult()
         {
             //Arrange
-            _documentsController = new DocumentsController(ValidReadEventsFunc(), SaveAndPublish,
+            _documentsController = new DocumentsController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish,
                 DocumentExistsByNumber, GetDocumentById);
             
             //Act
@@ -115,7 +107,7 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             const string error = "testError";
-            _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish,
+            _documentsController = new DocumentsController(Helper.ReadEventsFuncWithError(error), Helper.SaveAndPublish,
                 DocumentExistsByNumber, GetDocumentById);
             
             //Act
@@ -134,7 +126,7 @@ namespace Docman.UnitTests.Controllers
             var command = new CreateDocumentCommand("1234", "test");
 
             _documentsController =
-                new DocumentsController(ValidReadEventsFunc(), SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.CreateDocument(command);
@@ -151,7 +143,7 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var command = new CreateDocumentCommand(string.Empty, "test");
             _documentsController =
-                new DocumentsController(ValidReadEventsFunc(), SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.CreateDocument(command);
@@ -170,7 +162,7 @@ namespace Docman.UnitTests.Controllers
             var documentExistsByNumber = new DocumentRepository.DocumentExistsByNumber(number => Task.FromResult(true));
 
             _documentsController =
-                new DocumentsController(ValidReadEventsFunc(), SaveAndPublish, documentExistsByNumber, GetDocumentById);
+                new DocumentsController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, documentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.CreateDocument(command);
@@ -187,11 +179,11 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
             
             var command = new UpdateDocumentCommand("1234", "test");
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.UpdateDocument(Guid.Empty, command);
@@ -207,11 +199,11 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
             
             var command = new UpdateDocumentCommand(string.Empty, "test");
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.UpdateDocument(Guid.Empty, command);
@@ -228,13 +220,13 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
             
             var command = new UpdateDocumentCommand("1234", "test");
             var documentExistsByNumber = new DocumentRepository.DocumentExistsByNumber(number => Task.FromResult(true));
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, documentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, documentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.UpdateDocument(Guid.Empty, command);
@@ -259,13 +251,13 @@ namespace Docman.UnitTests.Controllers
             var documentSentToApprovalDto = new DocumentSentForApprovalEventDto
                 { Id = Guid.Empty, TimeStamp = DateTime.UtcNow };
 
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent(),
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent(),
                 documentSentToApprovalDto.ToEvent());
 
             var command = new ApproveDocumentCommand("approve");
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.ApproveDocument(Guid.Empty, command);
@@ -282,7 +274,7 @@ namespace Docman.UnitTests.Controllers
             var command = new ApproveDocumentCommand("approve");
             const string error = "testError";
 
-            _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish,
+            _documentsController = new DocumentsController(Helper.ReadEventsFuncWithError(error), Helper.SaveAndPublish,
                 DocumentExistsByNumber, GetDocumentById);
             
             //Act
@@ -301,10 +293,10 @@ namespace Docman.UnitTests.Controllers
             var command = new ApproveDocumentCommand(null);
             var documentCreatedDto = new DocumentCreatedEventDto
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.ApproveDocument(Guid.Empty, command);
@@ -329,13 +321,12 @@ namespace Docman.UnitTests.Controllers
             var documentSentToApprovalDto = new DocumentSentForApprovalEventDto
                 { Id = Guid.Empty, TimeStamp = DateTime.UtcNow };
 
-            var readEventsFunc =
-                ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent(), documentSentToApprovalDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent(), documentSentToApprovalDto.ToEvent());
 
             var command = new RejectDocumentCommand("Bad document");
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.RejectDocument(Guid.Empty, command);
@@ -352,7 +343,7 @@ namespace Docman.UnitTests.Controllers
             var command = new RejectDocumentCommand("Reject");
             const string error = "testError";
 
-            _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish,
+            _documentsController = new DocumentsController(Helper.ReadEventsFuncWithError(error), Helper.SaveAndPublish,
                 DocumentExistsByNumber, GetDocumentById);
             
             //Act
@@ -371,10 +362,10 @@ namespace Docman.UnitTests.Controllers
             var command = new RejectDocumentCommand(string.Empty);
             var documentCreatedDto = new DocumentCreatedEventDto
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.RejectDocument(Guid.Empty, command);
@@ -384,99 +375,7 @@ namespace Docman.UnitTests.Controllers
             Assert.NotNull(badRequestResult);
             Assert.NotNull(badRequestResult.Value);
         }
-        
-        [Fact]
-        public async Task TestAddFileCreatedResult()
-        {
-            //Arrange
-            var documentId = Guid.NewGuid();
-            var command = new AddFileCommand("test", "description");
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
-            _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
-            
-            //Act
-            var result = await _documentsController.AddFile(documentId, command);
-            
-            //Assert
-            var createdResult = result as CreatedResult; 
-            Assert.NotNull(createdResult);
-            Assert.NotNull(createdResult.Location);
-        }
-        
-        [Fact]
-        public async Task TestAddFileReadEventsErrorBadRequestResult()
-        {
-            //Arrange
-            const string error = "testError";
-            var documentId = Guid.NewGuid();
-            var command = new AddFileCommand("test", "description");
-
-            _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish,
-                DocumentExistsByNumber, GetDocumentById);
-            
-            //Act
-            var result = await _documentsController.AddFile(documentId, command);
-            
-            //Assert
-            var badRequestResult = result as BadRequestObjectResult; 
-            Assert.NotNull(badRequestResult);
-            Assert.NotNull(badRequestResult.Value);
-        }
-        
-        [Fact]
-        public async Task TestAddFileInvalidCommandBadRequestResult()
-        {
-            //Arrange
-            var documentId = Guid.NewGuid();
-            var command = new AddFileCommand(null, "test");
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
-
-            _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
-            
-            //Act
-            var result = await _documentsController.AddFile(documentId, command);
-            
-            //Assert
-            var badRequestResult = result as BadRequestObjectResult; 
-            Assert.NotNull(badRequestResult);
-            Assert.NotNull(badRequestResult.Value);
-        }
-        
-        [Fact]
-        public async Task TestAddFileFIleNameExistsBadRequestResult()
-        {
-            //Arrange
-            var documentId = Guid.NewGuid();
-            var command = new AddFileCommand("test", "test");
-            
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var fileAddedDto = new FileAddedEventDto
-            {
-                Id = Guid.Empty, FileId = Guid.Empty.ToString(), FileName = "test",
-                TimeStamp = DateTime.UtcNow
-            };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
-
-            _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
-            
-            //Act
-            var result = await _documentsController.AddFile(documentId, command);
-            
-            //Assert
-            var badRequestResult = result as BadRequestObjectResult; 
-            Assert.NotNull(badRequestResult);
-            Assert.NotNull(badRequestResult.Value);
-        }
-        
         [Fact]
         public async Task TestSendDocumentForApprovalNoContentResult()
         {
@@ -488,10 +387,10 @@ namespace Docman.UnitTests.Controllers
                 Id = Guid.Empty, FileId = Guid.Empty.ToString(), FileName = "test",
                 TimeStamp = DateTime.UtcNow
             };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.SendDocumentForApproval(Guid.Empty);
@@ -507,10 +406,10 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var readEventsFunc = ValidReadEventsFunc(documentCreatedDto.ToEvent());
+            var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.SendDocumentForApproval(Guid.Empty);
@@ -525,10 +424,10 @@ namespace Docman.UnitTests.Controllers
         public async Task TestSendDocumentForApprovalInvalidIdBadRequestResult()
         {
             //Arrange
-            var readEventsFunc = ValidReadEventsFunc();
+            var readEventsFunc = Helper.ValidReadEventsFunc();
 
             _documentsController =
-                new DocumentsController(readEventsFunc, SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
+                new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
             var result = await _documentsController.SendDocumentForApproval(Guid.Empty);
@@ -544,7 +443,7 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             const string error = "testError";
-            _documentsController = new DocumentsController(ReadEventsFuncWithError(error), SaveAndPublish,
+            _documentsController = new DocumentsController(Helper.ReadEventsFuncWithError(error), Helper.SaveAndPublish,
                 DocumentExistsByNumber, GetDocumentById);
             
             //Act
