@@ -44,11 +44,13 @@ namespace Docman.API
                 postgresConnectionString)));
             services.AddSingleton(new DocumentRepository.UpdateDocumentStatus(
                 par(DocumentPostgresRepository.UpdateDocumentStatus, postgresConnectionString)));
+            services.AddSingleton(new DocumentRepository.AddFile(par(DocumentPostgresRepository.AddFile,
+                postgresConnectionString)));
             
             services.AddFluentMigratorCore().ConfigureRunner(rb => rb
                 .AddPostgres()
                 .WithGlobalConnectionString(postgresConnectionString)
-                .ScanIn(typeof(CreateDocumentTables).Assembly).For.Migrations());
+                .ScanIn(typeof(CreateDocumentsTable).Assembly).For.Migrations());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

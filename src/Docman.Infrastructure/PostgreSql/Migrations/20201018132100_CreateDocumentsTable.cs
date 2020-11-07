@@ -4,7 +4,7 @@ using FluentMigrator;
 namespace Docman.Infrastructure.PostgreSql.Migrations
 {
     [Migration(20201018132100)]
-    public class CreateDocumentTables : Migration
+    public class CreateDocumentsTable : Migration
     {
         public override void Up()
         {
@@ -23,7 +23,7 @@ namespace Docman.Infrastructure.PostgreSql.Migrations
 
         public override void Down()
         {
-            Delete.Table("Documents");
+            Delete.Table("Documents").InSchema("documents");
             Delete.Schema("documents");
         }
     }

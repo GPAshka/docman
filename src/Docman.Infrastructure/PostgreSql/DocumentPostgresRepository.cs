@@ -82,5 +82,21 @@ namespace Docman.Infrastructure.PostgreSql
 
                 return document;
             };
+        
+        public static Func<string, Guid, Guid, string, string, Task> AddFile =>
+            async (connectionString, fileId, documentId, name, description) =>
+            {
+                const string query =
+                    "INSERT INTO documents.\"Files\"(\"Id\", \"DocumentId\", \"Name\", \"Description\") VALUES (@Id, @DocumentId, @Name, @Description)";
+                
+                using IDbConnection connection = new NpgsqlConnection(connectionString);
+                await connection.ExecuteAsync(query, new
+                {
+                    Id = fileId,
+                    DocumentId = documentId,
+                    Name = name,
+                    Description = description
+                });
+            };
     }
 }

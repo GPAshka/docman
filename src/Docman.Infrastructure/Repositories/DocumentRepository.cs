@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Docman.Domain.DocumentAggregate;
 using Docman.Infrastructure.Dto;
 using LanguageExt;
 
@@ -17,5 +16,7 @@ namespace Docman.Infrastructure.Repositories
         public delegate Task<bool> DocumentExistsByNumber(string number);
 
         public delegate Task<Option<DocumentDatabaseDto>> GetDocumentById(Guid documentId);
+
+        public delegate Task AddFile(Guid fileId, Guid documentId, string name, string description);
     }
 }
