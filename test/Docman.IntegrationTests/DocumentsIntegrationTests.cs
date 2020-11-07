@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,6 +60,26 @@ namespace Docman.IntegrationTests
             Assert.Equal(updateDocumentCommand.Number, document.Number);
             Assert.Equal(updateDocumentCommand.Description, document.Description);
             Assert.Equal(DocumentStatus.Draft.ToString(), document.Status);
+        }
+
+        [Fact]
+        public async Task SendDocumentForApprovalTest()
+        {
+            // Arrange
+            var number = DateTime.UtcNow.Ticks.ToString();
+            const string description = "test document";
+
+            // Act
+            var documentUri = await CreateDocumentAsync(number, description);
+            var sendForApprovalResult = await _client.PutAsync(
+                new Uri(Path.Combine(documentUri.OriginalString, "send-for-approval"), UriKind.Relative),
+                new StringContent(string.Empty));
+            var document = await GetDocumentAsync(documentUri);
+            
+            // Assert
+            sendForApprovalResult.EnsureSuccessStatusCode();
+            Assert.NotNull(document);
+            Assert.Equal(DocumentStatus.WaitingForApproval.ToString(), document.Status);
         }
 
         private async Task<Uri> CreateDocumentAsync(string number, string description)
