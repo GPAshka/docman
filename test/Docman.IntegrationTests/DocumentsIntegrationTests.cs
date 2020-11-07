@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Docman.API;
 using Docman.API.Application.Commands;
 using Docman.Domain.DocumentAggregate;
+using Docman.IntegrationTests.Infrastructure;
 using Newtonsoft.Json;
 using Xunit;
 using Document = Docman.API.Application.Responses.Document;
