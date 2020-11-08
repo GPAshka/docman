@@ -1,13 +1,12 @@
 using System;
 using System.IO;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Docman.API;
 using Docman.API.Application.Commands;
 using Docman.Domain.DocumentAggregate;
+using Docman.IntegrationTests.Extensions;
 using Docman.IntegrationTests.Infrastructure;
-using Newtonsoft.Json;
 using Xunit;
 using Document = Docman.API.Application.Responses.Document;
 
@@ -30,8 +29,8 @@ namespace Docman.IntegrationTests
             const string description = "test document";
             
             // Act
-            var documentUri = await CreateDocumentAsync(number, description);
-            var document = await GetDocumentAsync(documentUri);
+            var documentUri = await _client.CreateDocumentAsync(number, description);
+            var document = await _client.GetAsync<Document>(documentUri);
             
             // Assert
             Assert.NotNull(document);
@@ -46,17 +45,14 @@ namespace Docman.IntegrationTests
             // Arrange
             const string description = "test document";
             var number = DateTime.UtcNow.Ticks.ToString();
-            
             var updateDocumentCommand = new UpdateDocumentCommand($"{number}-update", $"{description}-update");
-            var content = GetStringContent(updateDocumentCommand);
-            
+
             // Act
-            var documentUri = await CreateDocumentAsync(number, description);
-            var documentUpdateResult = await _client.PutAsync(documentUri, content);
-            var document = await GetDocumentAsync(documentUri);
+            var documentUri = await _client.CreateDocumentAsync(number, description);
+            await _client.UpdateDocumentAsync(documentUri, updateDocumentCommand);
+            var document = await _client.GetAsync<Document>(documentUri);
             
             // Assert
-            documentUpdateResult.EnsureSuccessStatusCode();
             Assert.NotNull(document);
             Assert.Equal(updateDocumentCommand.Number, document.Number);
             Assert.Equal(updateDocumentCommand.Description, document.Description);
@@ -71,44 +67,16 @@ namespace Docman.IntegrationTests
             const string description = "test document";
 
             // Act
-            var documentUri = await CreateDocumentAsync(number, description);
-            var sendForApprovalResult = await _client.PutAsync(
+            var documentUri = await _client.CreateDocumentAsync(number, description);
+            var sendForApprovalResponse = await _client.PutAsync(
                 new Uri(Path.Combine(documentUri.OriginalString, "send-for-approval"), UriKind.Relative),
                 new StringContent(string.Empty));
-            var document = await GetDocumentAsync(documentUri);
+            var document = await _client.GetAsync<Document>(documentUri);
             
             // Assert
-            sendForApprovalResult.EnsureSuccessStatusCode();
+            sendForApprovalResponse.EnsureSuccessStatusCode();
             Assert.NotNull(document);
             Assert.Equal(DocumentStatus.WaitingForApproval.ToString(), document.Status);
-        }
-
-        private async Task<Uri> CreateDocumentAsync(string number, string description)
-        {
-            var createDocumentCommand = new CreateDocumentCommand(number, description);
-            var content = GetStringContent(createDocumentCommand);
-
-            var createResponse = await _client.PostAsync("/documents", content);
-            
-            createResponse.EnsureSuccessStatusCode();
-            Assert.NotNull(createResponse.Headers.Location);
-
-            return createResponse.Headers.Location;
-        }
-
-        private async Task<Document> GetDocumentAsync(Uri documentUri)
-        {
-            var getResponse = await _client.GetAsync(documentUri);
-            getResponse.EnsureSuccessStatusCode();
-
-            var getDocumentJson = await getResponse.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<Document>(getDocumentJson);
-        }
-
-        private static StringContent GetStringContent(object command)
-        {
-            var json = JsonConvert.SerializeObject(command);
-            return new StringContent(json, Encoding.UTF8, "application/json");
         }
     }
 }
