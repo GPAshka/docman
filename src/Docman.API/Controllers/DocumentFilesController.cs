@@ -18,14 +18,16 @@ namespace Docman.API.Controllers
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
         private readonly Action<Event> SaveAndPublishEvent;
-        private readonly DocumentRepository.GetFile _getFile;
+        private readonly DocumentRepository.GetFile GetFile;
+        private readonly DocumentRepository.GetFiles GetFiles;
 
         public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublishEvent, DocumentRepository.GetFile getFile)
+            Action<Event> saveAndPublishEvent, DocumentRepository.GetFile getFile, DocumentRepository.GetFiles getFiles)
         {
             ReadEvents = readEvents;
             SaveAndPublishEvent = saveAndPublishEvent;
-            _getFile = getFile;
+            GetFile = getFile;
+            GetFiles = getFiles;
         }
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
@@ -35,14 +37,23 @@ namespace Docman.API.Controllers
         [Route("{fileId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetFile(Guid documentId, Guid fileId)
+        public async Task<IActionResult> GetFileAsync(Guid documentId, Guid fileId)
         {
-            return await _getFile(documentId, fileId)
+            return await GetFile(documentId, fileId)
                 .MapT(ResponseHelper.GenerateFileResponse)
-                .Map(document =>
-                    document.Match<IActionResult>(
+                .Map(file =>
+                    file.Match<IActionResult>(
                         Some: Ok,
                         None: NotFound()));
+        }
+        
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetFilesAsync(Guid documentId)
+        {
+            return await GetFiles(documentId)
+                .MapT(ResponseHelper.GenerateFileResponse)
+                .Map(Ok);
         }
         
         [HttpPost]

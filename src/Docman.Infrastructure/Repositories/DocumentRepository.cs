@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Docman.Infrastructure.Dto;
 using LanguageExt;
@@ -20,5 +21,7 @@ namespace Docman.Infrastructure.Repositories
         public delegate Task AddFile(Guid fileId, Guid documentId, string name, string description);
 
         public delegate Task<Option<FileDatabaseDto>> GetFile(Guid documentId, Guid fileId);
+        
+        public delegate Task<IEnumerable<FileDatabaseDto>> GetFiles(Guid documentId);
     }
 }

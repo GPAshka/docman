@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using Dapper;
@@ -113,6 +114,18 @@ namespace Docman.Infrastructure.PostgreSql
                     return None;
 
                 return file;
+            };
+        
+        public static Func<string, Guid, Task<IEnumerable<FileDatabaseDto>>> GetFilesAsync =>
+            async (connectionString, documentId) =>
+            {
+                const string query =
+                    "SELECT \"Id\", \"DocumentId\", \"Name\", \"Description\" FROM documents.\"Files\" WHERE \"DocumentId\" = @DocumentId";
+                
+                using IDbConnection connection = new NpgsqlConnection(connectionString);
+                var files = await connection.QueryAsync<FileDatabaseDto>(query, new { DocumentId = documentId });
+
+                return files;
             };
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Docman.API;
@@ -31,11 +32,16 @@ namespace Docman.IntegrationTests
             var documentUri = await _client.CreateDocumentAsync(number, documentDescription);
             var fileUri = await _client.AddFileAsync(documentUri, addFileCommand);
             var file = await _client.GetAsync<File>(fileUri);
+            var files = await _client.GetFiles(documentUri);
 
             // Assert
             Assert.NotNull(file);
             Assert.Equal(addFileCommand.FileName, file.Name);
             Assert.Equal(addFileCommand.FileDescription, file.Description);
+            
+            Assert.NotNull(files);
+            Assert.Single(files);
+            Assert.Equal(file.Id, files.First().Id);
         }
     }
 }

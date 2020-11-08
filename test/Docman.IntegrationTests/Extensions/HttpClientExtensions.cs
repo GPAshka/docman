@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using Docman.API.Application.Commands;
 using Newtonsoft.Json;
 using Xunit;
+using File = Docman.API.Application.Responses.File;
 
 namespace Docman.IntegrationTests.Extensions
 {
@@ -55,10 +57,25 @@ namespace Docman.IntegrationTests.Extensions
             return response.Headers.Location;
         }
 
+        public static async Task<IEnumerable<File>> GetFiles(this HttpClient httpClient, Uri documentUri)
+        {
+            var requestUri = Combine(documentUri, "files");
+            var response = await httpClient.GetAsync(requestUri);
+            response.EnsureSuccessStatusCode();
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<IEnumerable<File>>(responseContent);
+        }
+
         private static StringContent GetStringContent(object command)
         {
             var json = JsonConvert.SerializeObject(command);
             return new StringContent(json, Encoding.UTF8, "application/json");
+        }
+
+        private static Uri Combine(Uri baseUri, string relativeUri)
+        {
+            return new Uri(Path.Combine(baseUri.OriginalString, relativeUri), UriKind.Relative);
         }
     }
 }

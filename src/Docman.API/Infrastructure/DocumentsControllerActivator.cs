@@ -67,8 +67,10 @@ namespace Docman.API.Infrastructure
             var saveAndPublish = ConstructSaveAndPublishEventFunc();
 
             var getFile = par(DocumentPostgresRepository.GetFileByIdAsync, _postgresConnectionString);
+            var getFiles = par(DocumentPostgresRepository.GetFilesAsync, _postgresConnectionString);
 
-            return new DocumentFilesController(readEvents, saveAndPublish, new DocumentRepository.GetFile(getFile));
+            return new DocumentFilesController(readEvents, saveAndPublish, new DocumentRepository.GetFile(getFile),
+                new DocumentRepository.GetFiles(getFiles));
         }
 
         private Action<Event> ConstructSaveAndPublishEventFunc()
