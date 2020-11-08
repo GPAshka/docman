@@ -68,7 +68,7 @@ namespace Docman.API.Infrastructure
 
             var getFile = par(DocumentPostgresRepository.GetFileByIdAsync, _postgresConnectionString);
 
-            return new DocumentFilesController(readEvents, saveAndPublish, new DocumentRepository.GetFileById(getFile));
+            return new DocumentFilesController(readEvents, saveAndPublish, new DocumentRepository.GetFile(getFile));
         }
 
         private Action<Event> ConstructSaveAndPublishEventFunc()

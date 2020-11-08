@@ -19,6 +19,6 @@ namespace Docman.Infrastructure.Repositories
 
         public delegate Task AddFile(Guid fileId, Guid documentId, string name, string description);
 
-        public delegate Task<Option<FileDatabaseDto>> GetFileById(Guid fileId);
+        public delegate Task<Option<FileDatabaseDto>> GetFile(Guid documentId, Guid fileId);
     }
 }

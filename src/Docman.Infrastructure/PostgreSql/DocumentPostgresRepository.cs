@@ -99,14 +99,15 @@ namespace Docman.Infrastructure.PostgreSql
                 });
             };
         
-        public static Func<string, Guid, Task<Option<FileDatabaseDto>>> GetFileByIdAsync =>
-            async (connectionString, fileId) =>
+        public static Func<string, Guid, Guid, Task<Option<FileDatabaseDto>>> GetFileByIdAsync =>
+            async (connectionString, documentId, fileId) =>
             {
                 const string query =
-                    "SELECT \"Id\", \"DocumentId\", \"Name\", \"Description\" FROM documents.\"Files\" WHERE \"Id\" = @Id";
+                    "SELECT \"Id\", \"DocumentId\", \"Name\", \"Description\" FROM documents.\"Files\" WHERE \"Id\" = @Id AND \"DocumentId\" = @DocumentId";
                 
                 using IDbConnection connection = new NpgsqlConnection(connectionString);
-                var file = await connection.QuerySingleOrDefaultAsync<FileDatabaseDto>(query, new { Id = fileId });
+                var file = await connection.QuerySingleOrDefaultAsync<FileDatabaseDto>(query,
+                    new { Id = fileId, DocumentId = documentId });
 
                 if (file == null)
                     return None;

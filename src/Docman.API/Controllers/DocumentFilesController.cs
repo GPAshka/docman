@@ -18,14 +18,14 @@ namespace Docman.API.Controllers
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
         private readonly Action<Event> SaveAndPublishEvent;
-        private readonly DocumentRepository.GetFileById GetFileById;
+        private readonly DocumentRepository.GetFile _getFile;
 
         public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublishEvent, DocumentRepository.GetFileById getFileById)
+            Action<Event> saveAndPublishEvent, DocumentRepository.GetFile getFile)
         {
             ReadEvents = readEvents;
             SaveAndPublishEvent = saveAndPublishEvent;
-            GetFileById = getFileById;
+            _getFile = getFile;
         }
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
@@ -37,7 +37,7 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetFile(Guid documentId, Guid fileId)
         {
-            return await GetFileById(fileId)
+            return await _getFile(documentId, fileId)
                 .MapT(ResponseHelper.GenerateFileResponse)
                 .Map(document =>
                     document.Match<IActionResult>(
