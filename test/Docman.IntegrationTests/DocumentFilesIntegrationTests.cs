@@ -24,12 +24,11 @@ namespace Docman.IntegrationTests
         public async Task AddFileTest()
         {
             // Arrange
-            var number = DateTime.UtcNow.Ticks.ToString();
-            const string documentDescription = "test document";
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
             var addFileCommand = new AddFileCommand("Test", "Test file");
 
             // Act
-            var documentUri = await _client.CreateDocumentAsync(number, documentDescription);
+            var documentUri = await _client.CreateDocumentAsync(createDocumentCommand);
             var fileUri = await _client.AddFileAsync(documentUri, addFileCommand);
             var file = await _client.GetAsync<File>(fileUri);
             var files = await _client.GetFiles(documentUri);

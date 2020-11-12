@@ -25,17 +25,16 @@ namespace Docman.IntegrationTests
         public async Task CreateDocumentTest()
         {
             // Arrange
-            var number = DateTime.UtcNow.Ticks.ToString();
-            const string description = "test document";
-            
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
+
             // Act
-            var documentUri = await _client.CreateDocumentAsync(number, description);
+            var documentUri = await _client.CreateDocumentAsync(createDocumentCommand);
             var document = await _client.GetAsync<Document>(documentUri);
             
             // Assert
             Assert.NotNull(document);
-            Assert.Equal(number, document.Number);
-            Assert.Equal(description, document.Description);
+            Assert.Equal(createDocumentCommand.Number, document.Number);
+            Assert.Equal(createDocumentCommand.Description, document.Description);
             Assert.Equal(DocumentStatus.Draft.ToString(), document.Status);
         }
 
@@ -43,12 +42,12 @@ namespace Docman.IntegrationTests
         public async Task UpdateDocumentTest()
         {
             // Arrange
-            const string description = "test document";
-            var number = DateTime.UtcNow.Ticks.ToString();
-            var updateDocumentCommand = new UpdateDocumentCommand($"{number}-update", $"{description}-update");
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var updateDocumentCommand = new UpdateDocumentCommand($"{createDocumentCommand.Number}-update",
+                $"{createDocumentCommand.Description}-update");
 
             // Act
-            var documentUri = await _client.CreateDocumentAsync(number, description);
+            var documentUri = await _client.CreateDocumentAsync(createDocumentCommand);
             await _client.UpdateDocumentAsync(documentUri, updateDocumentCommand);
             var document = await _client.GetAsync<Document>(documentUri);
             
@@ -63,11 +62,10 @@ namespace Docman.IntegrationTests
         public async Task SendDocumentForApprovalTest()
         {
             // Arrange
-            var number = DateTime.UtcNow.Ticks.ToString();
-            const string description = "test document";
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
 
             // Act
-            var documentUri = await _client.CreateDocumentAsync(number, description);
+            var documentUri = await _client.CreateDocumentAsync(createDocumentCommand);
             var sendForApprovalResponse = await _client.PutAsync(
                 new Uri(Path.Combine(documentUri.OriginalString, "send-for-approval"), UriKind.Relative),
                 new StringContent(string.Empty));

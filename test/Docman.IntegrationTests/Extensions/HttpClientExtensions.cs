@@ -22,10 +22,9 @@ namespace Docman.IntegrationTests.Extensions
             return JsonConvert.DeserializeObject<T>(responseContent);
         }
         
-        public static async Task<Uri> CreateDocumentAsync(this HttpClient httpClient, string number, string description)
+        public static async Task<Uri> CreateDocumentAsync(this HttpClient httpClient, CreateDocumentCommand command)
         {
-            var createDocumentCommand = new CreateDocumentCommand(number, description);
-            var content = GetStringContent(createDocumentCommand);
+            var content = GetStringContent(command);
 
             var createResponse = await httpClient.PostAsync("/documents", content);
 
