@@ -46,7 +46,7 @@ namespace Docman.IntegrationTests.Extensions
         public static async Task<Uri> AddFileAsync(this HttpClient httpClient, Uri documentUri, AddFileCommand command)
         {
             var content = GetStringContent(command);
-            var requestUri = new Uri(Path.Combine(documentUri.OriginalString, "files"), UriKind.Relative);
+            var requestUri = CombineUri(documentUri, "files");
 
             var response = await httpClient.PostAsync(requestUri, content);
             
@@ -56,9 +56,26 @@ namespace Docman.IntegrationTests.Extensions
             return response.Headers.Location;
         }
 
+        public static async Task SendDocumentForApprovalAsync(this HttpClient httpClient, Uri documentUri)
+        {
+            var requestUri = CombineUri(documentUri, "send-for-approval");
+            var response = await httpClient.PutAsync(requestUri, new StringContent(string.Empty));
+            response.EnsureSuccessStatusCode();
+        }
+
+        public static async Task ApproveDocument(this HttpClient httpClient, Uri documentUri,
+            ApproveDocumentCommand command)
+        {
+            var requestUri = CombineUri(documentUri, "approve");
+            var content = GetStringContent(command);
+            
+            var response = await httpClient.PutAsync(requestUri, content);
+            response.EnsureSuccessStatusCode();
+        }
+        
         public static async Task<IEnumerable<File>> GetFiles(this HttpClient httpClient, Uri documentUri)
         {
-            var requestUri = Combine(documentUri, "files");
+            var requestUri = CombineUri(documentUri, "files");
             var response = await httpClient.GetAsync(requestUri);
             response.EnsureSuccessStatusCode();
 
@@ -72,7 +89,7 @@ namespace Docman.IntegrationTests.Extensions
             return new StringContent(json, Encoding.UTF8, "application/json");
         }
 
-        private static Uri Combine(Uri baseUri, string relativeUri)
+        private static Uri CombineUri(Uri baseUri, string relativeUri)
         {
             return new Uri(Path.Combine(baseUri.OriginalString, relativeUri), UriKind.Relative);
         }

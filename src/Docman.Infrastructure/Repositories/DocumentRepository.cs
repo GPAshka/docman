@@ -14,6 +14,8 @@ namespace Docman.Infrastructure.Repositories
 
         public delegate Task UpdateDocumentStatus(Guid documentId, string status);
 
+        public delegate Task ApproveDocument(Guid documentId, string status, string approvalComment);
+
         public delegate Task<bool> DocumentExistsByNumber(string number);
 
         public delegate Task<Option<DocumentDatabaseDto>> GetDocumentById(Guid documentId);

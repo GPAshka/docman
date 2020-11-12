@@ -46,6 +46,8 @@ namespace Docman.API
                 par(DocumentPostgresRepository.UpdateDocumentStatus, postgresConnectionString)));
             services.AddSingleton(new DocumentRepository.AddFile(par(DocumentPostgresRepository.AddFile,
                 postgresConnectionString)));
+            services.AddSingleton(new DocumentRepository.ApproveDocument(par(DocumentPostgresRepository.ApproveDocument,
+                postgresConnectionString)));
             
             services.AddFluentMigratorCore().ConfigureRunner(rb => rb
                 .AddPostgres()

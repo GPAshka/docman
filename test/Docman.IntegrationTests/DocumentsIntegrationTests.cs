@@ -63,18 +63,40 @@ namespace Docman.IntegrationTests
         {
             // Arrange
             var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var addFileCommand = new AddFileCommand("Test", "Test file");
 
             // Act
             var documentUri = await _client.CreateDocumentAsync(createDocumentCommand);
-            var sendForApprovalResponse = await _client.PutAsync(
-                new Uri(Path.Combine(documentUri.OriginalString, "send-for-approval"), UriKind.Relative),
-                new StringContent(string.Empty));
+            await _client.AddFileAsync(documentUri, addFileCommand);
+            await _client.SendDocumentForApprovalAsync(documentUri);
+            
             var document = await _client.GetAsync<Document>(documentUri);
             
             // Assert
-            sendForApprovalResponse.EnsureSuccessStatusCode();
             Assert.NotNull(document);
             Assert.Equal(DocumentStatus.WaitingForApproval.ToString(), document.Status);
+        }
+        
+        [Fact]
+        public async Task ApproveDocumentTest()
+        {
+            // Arrange
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var addFileCommand = new AddFileCommand("Test", "Test file");
+            var approveDocumentCommand = new ApproveDocumentCommand("Approved");
+
+            // Act
+            var documentUri = await _client.CreateDocumentAsync(createDocumentCommand);
+            await _client.AddFileAsync(documentUri, addFileCommand);
+            await _client.SendDocumentForApprovalAsync(documentUri);
+            await _client.ApproveDocument(documentUri, approveDocumentCommand);
+
+            var document = await _client.GetAsync<Document>(documentUri);
+            
+            // Assert
+            Assert.NotNull(document);
+            Assert.Equal(DocumentStatus.Approved.ToString(), document.Status);
+            Assert.Equal(approveDocumentCommand.Comment, document.ApprovalComment);
         }
     }
 }
