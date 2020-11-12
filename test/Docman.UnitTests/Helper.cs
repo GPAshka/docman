@@ -8,7 +8,10 @@ namespace Docman.UnitTests
 {
     public static class Helper
     {
-        public static void SaveAndPublish(Event evt) { }
+        public static Task SaveAndPublish(Event evt)
+        {
+            return Task.CompletedTask;
+        }
 
         public static Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ValidReadEventsFunc(
             params Validation<Error, Event>[] events) => id => Task.FromResult(events.Traverse(x => x));

@@ -7,7 +7,6 @@ using Docman.API.Application.Dto.Events;
 using Docman.API.Application.Responses;
 using Docman.API.Controllers;
 using Docman.API.Extensions;
-using Docman.Domain;
 using Docman.Infrastructure.Dto;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
@@ -20,10 +19,6 @@ namespace Docman.UnitTests.Controllers
     public class DocumentFilesControllerTests
     {
         private DocumentFilesController _documentFilesController;
-
-        private static void SaveAndPublish(Event evt)
-        {
-        }
 
         private static DocumentRepository.GetFile GetFile =>
             (documentId, fileId) => Task.FromResult(Some(new FileDatabaseDto { Id = fileId, DocumentId = documentId }));
@@ -123,7 +118,8 @@ namespace Docman.UnitTests.Controllers
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
-            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController =
+                new DocumentFilesController(readEventsFunc, Helper.SaveAndPublish, GetFile, GetFiles);
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -142,8 +138,8 @@ namespace Docman.UnitTests.Controllers
             var documentId = Guid.NewGuid();
             var command = new AddFileCommand("test", "description");
 
-            _documentFilesController =
-                new DocumentFilesController(Helper.ReadEventsFuncWithError(error), SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController = new DocumentFilesController(Helper.ReadEventsFuncWithError(error),
+                Helper.SaveAndPublish, GetFile, GetFiles);
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -164,7 +160,8 @@ namespace Docman.UnitTests.Controllers
                 { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
             var readEventsFunc = Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
-            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController =
+                new DocumentFilesController(readEventsFunc, Helper.SaveAndPublish, GetFile, GetFiles);
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -191,7 +188,8 @@ namespace Docman.UnitTests.Controllers
             var readEventsFunc =
                 Helper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
 
-            _documentFilesController = new DocumentFilesController(readEventsFunc, SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController =
+                new DocumentFilesController(readEventsFunc, Helper.SaveAndPublish, GetFile, GetFiles);
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);

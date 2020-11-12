@@ -11,7 +11,7 @@ namespace Docman.API.Application.Helpers
 {
     public static class HelperFunctions
     {
-        public static Action<Func<EventDto, Task>, Func<EventDto, Task>, Event> SaveAndPublish =>
+        public static Func<Func<EventDto, Task>, Func<EventDto, Task>, Event, Task> SaveAndPublish =>
             async (saveEvent, publishEvent, @event) =>
             {
                 var eventDto = @event.ToDto();

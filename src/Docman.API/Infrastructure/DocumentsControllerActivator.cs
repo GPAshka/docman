@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Docman.API.Application.Helpers;
 using Docman.API.Controllers;
 using Docman.Domain;
@@ -73,13 +74,13 @@ namespace Docman.API.Infrastructure
                 new DocumentRepository.GetFiles(getFiles));
         }
 
-        private Action<Event> ConstructSaveAndPublishEventFunc()
+        private Func<Event, Task> ConstructSaveAndPublishEventFunc()
         {
             var mediator = _serviceProvider.GetRequiredService<IMediator>();
             
             var saveEvent = par(EventStoreHelper.SaveEvent, _eventStoreConnectionString);
-            return par(HelperFunctions.SaveAndPublish, dto => saveEvent(dto),
-                dto => mediator.Publish(dto));
+            return par(HelperFunctions.SaveAndPublish, async dto => await saveEvent(dto),
+                async dto => await mediator.Publish(dto));
         }
     }
 }

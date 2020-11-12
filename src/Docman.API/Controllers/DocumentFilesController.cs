@@ -17,12 +17,12 @@ namespace Docman.API.Controllers
     public class DocumentFilesController : ControllerBase
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
-        private readonly Action<Event> SaveAndPublishEvent;
+        private readonly Func<Event, Task> SaveAndPublishEvent;
         private readonly DocumentRepository.GetFile GetFile;
         private readonly DocumentRepository.GetFiles GetFiles;
 
         public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublishEvent, DocumentRepository.GetFile getFile, DocumentRepository.GetFiles getFiles)
+            Func<Event, Task> saveAndPublishEvent, DocumentRepository.GetFile getFile, DocumentRepository.GetFiles getFiles)
         {
             ReadEvents = readEvents;
             SaveAndPublishEvent = saveAndPublishEvent;

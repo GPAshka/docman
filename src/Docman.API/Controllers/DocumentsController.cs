@@ -21,7 +21,7 @@ namespace Docman.API.Controllers
     public class DocumentsController : ControllerBase
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
-        private readonly Action<Event> SaveAndPublishEvent;
+        private readonly Func<Event, Task> SaveAndPublishEventAsync;
         private readonly DocumentRepository.DocumentExistsByNumber DocumentExistsByNumber;
         private readonly DocumentRepository.GetDocumentById _getDocumentById;
 
@@ -46,11 +46,17 @@ namespace Docman.API.Controllers
                 return Validation<Error, UpdateDocumentCommand>.Success(updateCommand);
             };
 
+        private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEvent => async e =>
+        {
+            await SaveAndPublishEventAsync(e);
+            return Validation<Error, Event>.Success(e);
+        };
+
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Action<Event> saveAndPublishEvent, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
+            Func<Event, Task> saveAndPublishEventAsync, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
             DocumentRepository.GetDocumentById getDocumentById)
         {
-            SaveAndPublishEvent = saveAndPublishEvent;
+            SaveAndPublishEventAsync = saveAndPublishEventAsync;
             ReadEvents = readEvents;
             DocumentExistsByNumber = documentExistsByNumber;
             _getDocumentById = getDocumentById;
@@ -91,13 +97,15 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateDocument([FromBody] CreateDocumentCommand command)
         {
-            return await ValidateCreateCommand(command)
-                .BindT(c => c.ToEvent(Guid.NewGuid()))
-                .Do(val =>
-                    val.Do(e => SaveAndPublishEvent(e)))
-                .Map(val => val.Match<IActionResult>(
-                    Succ: evt => Created($"documents/{evt.EntityId}", null),
-                    Fail: errors => BadRequest(string.Join(",", errors))));
+            var outcome =
+                from cmd in ValidateCreateCommand(command)
+                from evt in cmd.ToEvent(Guid.NewGuid()).AsTask()
+                from _ in SaveAndPublishEvent(evt)
+                select evt;
+
+            return await outcome.Map(val => val.Match<IActionResult>(
+                Succ: evt => Created($"documents/{evt.EntityId}", null),
+                Fail: errors => BadRequest(string.Join(",", errors))));
         }
 
         [HttpPut]
