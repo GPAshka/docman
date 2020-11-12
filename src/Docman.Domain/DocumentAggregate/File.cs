@@ -5,11 +5,11 @@ namespace Docman.Domain.DocumentAggregate
 {
     public class File
     {
-        public Guid Id { get; }
+        public FileId Id { get; }
         public FileName Name { get; }
         public Option<FileDescription> Description { get; }
         
-        public File(Guid id, FileName name, Option<FileDescription> description)
+        public File(FileId id, FileName name, Option<FileDescription> description)
         {
             Id = id;
             Name = name;

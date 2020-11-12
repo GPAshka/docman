@@ -5,11 +5,11 @@ namespace Docman.Domain.DocumentAggregate.Events
 {
     public class FileAddedEvent : Event
     {
-        public Guid FileId { get; }
+        public FileId FileId { get; }
         public FileName Name { get; }
         public Option<FileDescription> Description { get; }
 
-        public FileAddedEvent(DocumentId entityId, Guid fileId, FileName name, Option<FileDescription> description,
+        public FileAddedEvent(DocumentId entityId, FileId fileId, FileName name, Option<FileDescription> description,
             DateTime timeStamp) : base(entityId.Value, timeStamp)
         {
             FileId = fileId;
@@ -17,11 +17,13 @@ namespace Docman.Domain.DocumentAggregate.Events
             Description = description;
         }
 
-        public static Validation<Error, FileAddedEvent> Create(Guid documentId, string fileName, string fileDescription)
-            => FileName.Create(fileName)
+        public static Validation<Error, FileAddedEvent> Create(Guid documentId, Guid fileId, string fileName,
+            string fileDescription) =>
+            FileName.Create(fileName)
                 .Bind(name => FileDescription.Create(fileDescription)
                     .Map(desc =>
-                        new FileAddedEvent(new DocumentId(documentId), Guid.NewGuid(), name, desc, DateTime.UtcNow)));
+                        new FileAddedEvent(new DocumentId(documentId), new FileId(fileId), name, desc,
+                            DateTime.UtcNow)));
 
     }
 }

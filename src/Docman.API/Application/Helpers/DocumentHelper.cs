@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.DocumentAggregate.Errors;
@@ -60,8 +59,8 @@ namespace Docman.API.Application.Helpers
                     .Map(doc => (doc, evt)));
 
         public static Validation<Error, (Document Document, FileAddedEvent Event)> AddFile(this Document document,
-            string fileName, string fileDescription) =>
-            FileAddedEvent.Create(document.Id.Value, fileName, fileDescription)
+            Guid fileId, string fileName, string fileDescription) =>
+            FileAddedEvent.Create(document.Id.Value, fileId, fileName, fileDescription)
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));
 

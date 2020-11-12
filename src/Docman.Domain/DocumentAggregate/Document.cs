@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Docman.Domain.DocumentAggregate.Errors;
@@ -29,7 +28,7 @@ namespace Docman.Domain.DocumentAggregate
         {
         }
 
-        public Validation<Error, Document> AddFile(Guid id, FileName name, Option<FileDescription> description)
+        public Validation<Error, Document> AddFile(FileId id, FileName name, Option<FileDescription> description)
         {
             if (Status != DocumentStatus.Draft)
                 return new InvalidStatusError(DocumentStatus.Draft, Status);

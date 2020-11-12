@@ -62,12 +62,12 @@ namespace Docman.API.Controllers
         public async Task<IActionResult> AddFile(Guid documentId, [FromBody] AddFileCommand command)
         {
             return await GetDocumentFromEvents(documentId)
-                .BindT(d => d.AddFile(command.FileName, command.FileDescription))
+                .BindT(d => d.AddFile(Guid.NewGuid(), command.FileName, command.FileDescription))
                 .Do(val =>
                     val.Do(res => SaveAndPublishEvent(res.Event)))
                 .Map(val => val.Match<IActionResult>(
                     Succ: res =>
-                        Created($"documents/{documentId}/files/{res.Event?.FileId.ToString()}", null),
+                        Created($"documents/{documentId}/files/{res.Event?.FileId}", null),
                     Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
         }
     }
