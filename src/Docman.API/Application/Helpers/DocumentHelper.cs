@@ -12,7 +12,8 @@ namespace Docman.API.Application.Helpers
     public static class DocumentHelper
     {
         private static Document CreateDocument(this DocumentCreatedEvent evt)
-            => new Document(new DocumentId(evt.EntityId), evt.Number, evt.Description, DocumentStatus.Draft);
+            => new Document(new DocumentId(evt.EntityId), evt.UserId, evt.Number, evt.Description,
+                DocumentStatus.Draft);
 
         private static Validation<Error, Document> Apply(this Document document, Event evt)
         {

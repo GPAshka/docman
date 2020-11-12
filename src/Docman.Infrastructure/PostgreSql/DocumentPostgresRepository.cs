@@ -13,16 +13,17 @@ namespace Docman.Infrastructure.PostgreSql
 {
     public static class DocumentPostgresRepository
     {
-        public static Func<string, Guid, string, string, Task> AddDocument =>
-            async (connectionString, documentId, number, description) =>
+        public static Func<string, Guid, Guid, string, string, Task> AddDocument =>
+            async (connectionString, documentId, userId, number, description) =>
             {
                 const string query =
-                    "INSERT INTO documents.\"Documents\"(\"Id\", \"Number\", \"Description\", \"Status\") VALUES (@Id, @Number, @Description, @Status)";
+                    "INSERT INTO documents.\"Documents\"(\"Id\", \"UserId\", \"Number\", \"Description\", \"Status\") VALUES (@Id, @UserId, @Number, @Description, @Status)";
                 
                 using IDbConnection connection = new NpgsqlConnection(connectionString);
                 await connection.ExecuteAsync(query, new
                 {
                     Id = documentId,
+                    UserId = userId,
                     Number = number,
                     Description = description,
                     Status = DocumentStatus.Draft.ToString()
@@ -102,7 +103,7 @@ namespace Docman.Infrastructure.PostgreSql
             async (connectionString, documentId) =>
             {
                 const string query =
-                    "SELECT \"Id\", \"Number\", \"Description\", \"Status\", \"ApprovalComment\", \"RejectReason\", \"DateCreated\" FROM documents.\"Documents\" WHERE \"Id\" = @Id";
+                    "SELECT \"Id\", \"UserId\", \"Number\", \"Description\", \"Status\", \"ApprovalComment\", \"RejectReason\", \"DateCreated\" FROM documents.\"Documents\" WHERE \"Id\" = @Id";
                 
                 using IDbConnection connection = new NpgsqlConnection(connectionString);
                 var document =

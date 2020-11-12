@@ -8,9 +8,9 @@ namespace Docman.Domain.DocumentAggregate
     {
         public RejectReason Reason { get; }
 
-        public RejectedDocument(DocumentId id, DocumentNumber number, Option<DocumentDescription> description,
-            IEnumerable<File> files, RejectReason reason) : base(id, number, description, DocumentStatus.Rejected,
-            files)
+        public RejectedDocument(DocumentId id, UserId userId, DocumentNumber number,
+            Option<DocumentDescription> description, IEnumerable<File> files, RejectReason reason) : base(id, userId,
+            number, description, DocumentStatus.Rejected, files)
         {
             Reason = reason;
         }

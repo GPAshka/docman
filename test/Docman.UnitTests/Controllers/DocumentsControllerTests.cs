@@ -123,7 +123,7 @@ namespace Docman.UnitTests.Controllers
         public async Task TestCreateDocumentCreatedResult()
         {
             //Arrange
-            var command = new CreateDocumentCommand("1234", "test");
+            var command = new CreateDocumentCommand( Guid.Empty, "1234", "test");
 
             _documentsController =
                 new DocumentsController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
@@ -141,7 +141,7 @@ namespace Docman.UnitTests.Controllers
         public async Task TestCreateDocumentInvalidCommandBadRequestResult()
         {
             //Arrange
-            var command = new CreateDocumentCommand(string.Empty, "test");
+            var command = new CreateDocumentCommand(Guid.Empty, string.Empty, "test");
             _documentsController =
                 new DocumentsController(Helper.ValidReadEventsFunc(), Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
@@ -158,7 +158,7 @@ namespace Docman.UnitTests.Controllers
         public async Task TestCreateDocumentDocumentExistsBadRequestResult()
         {
             //Arrange
-            var command = new CreateDocumentCommand("1234", "test");
+            var command = new CreateDocumentCommand(Guid.Empty, "1234", "test");
             var documentExistsByNumber = new DocumentRepository.DocumentExistsByNumber(number => Task.FromResult(true));
 
             _documentsController =

@@ -8,7 +8,7 @@ namespace Docman.Infrastructure.Repositories
 {
     public static class DocumentRepository
     {
-        public delegate Task AddDocument(Guid documentId, string number, string description);
+        public delegate Task AddDocument(Guid documentId, Guid userId, string number, string description);
         
         public delegate Task UpdateDocument(Guid documentId, string number, string description);
 

@@ -24,7 +24,8 @@ namespace Docman.IntegrationTests
         public async Task AddFileTest()
         {
             // Arrange
-            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var createDocumentCommand =
+                new CreateDocumentCommand(Guid.NewGuid(), DateTime.UtcNow.Ticks.ToString(), "Test document");
             var addFileCommand = new AddFileCommand("Test", "Test file");
 
             // Act

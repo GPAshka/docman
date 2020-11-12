@@ -14,6 +14,7 @@ namespace Docman.API.Application.Helpers
             DocumentDatabaseDto documentDatabaseDto) => new Responses.Document
         {
             Id = documentDatabaseDto.Id,
+            UserId = documentDatabaseDto.UserId,
             Number = documentDatabaseDto.Number,
             Description = documentDatabaseDto.Description,
             Status = documentDatabaseDto.Status,

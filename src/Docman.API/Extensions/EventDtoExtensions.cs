@@ -26,6 +26,7 @@ namespace Docman.API.Extensions
             new DocumentCreatedEventDto
             {
                 Id = @event.EntityId,
+                UserId = @event.UserId.Value,
                 Number = @event.Number.Value,
                 Description = @event.Description.Match(Some: d => d.Value, None: string.Empty),
                 TimeStamp = @event.TimeStamp
@@ -76,7 +77,8 @@ namespace Docman.API.Extensions
         public static Validation<Error, Event> ToEvent(this DocumentCreatedEventDto dto) =>
             DocumentNumber.Create(dto.Number)
                 .Bind(num => DocumentDescription.Create(dto.Description)
-                    .Map(desc => (Event) new DocumentCreatedEvent(new DocumentId(dto.Id), num, desc, dto.TimeStamp)));
+                    .Map(desc => (Event) new DocumentCreatedEvent(new DocumentId(dto.Id), new UserId(dto.UserId), num,
+                        desc, dto.TimeStamp)));
 
         public static Validation<Error, Event> ToEvent(this DocumentApprovedEventDto dto) =>
             Comment.Create(dto.Comment)
