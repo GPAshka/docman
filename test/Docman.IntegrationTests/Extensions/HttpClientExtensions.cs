@@ -73,6 +73,16 @@ namespace Docman.IntegrationTests.Extensions
             response.EnsureSuccessStatusCode();
         }
         
+        public static async Task RejectDocument(this HttpClient httpClient, Uri documentUri,
+            RejectDocumentCommand command)
+        {
+            var requestUri = CombineUri(documentUri, "reject");
+            var content = GetStringContent(command);
+            
+            var response = await httpClient.PutAsync(requestUri, content);
+            response.EnsureSuccessStatusCode();
+        }
+        
         public static async Task<IEnumerable<File>> GetFiles(this HttpClient httpClient, Uri documentUri)
         {
             var requestUri = CombineUri(documentUri, "files");

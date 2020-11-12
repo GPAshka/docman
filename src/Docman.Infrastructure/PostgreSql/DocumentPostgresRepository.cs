@@ -59,6 +59,21 @@ namespace Docman.Infrastructure.PostgreSql
                 });
             };
         
+        public static Func<string, Guid, string, string, Task> RejectDocument =>
+            async (connectionString, documentId, status, rejectReason) =>
+            {
+                const string query =
+                    "UPDATE documents.\"Documents\" SET \"Status\" = @Status, \"RejectReason\" = @RejectReason WHERE \"Id\" = @Id";
+                
+                using IDbConnection connection = new NpgsqlConnection(connectionString);
+                await connection.ExecuteAsync(query, new
+                {
+                    Id = documentId,
+                    Status = status,
+                    RejectReason = rejectReason,
+                });
+            };
+        
         public static Func<string, Guid, string, Task> UpdateDocumentStatus =>
             async (connectionString, documentId, status) =>
             {
