@@ -7,6 +7,7 @@ using Docman.API.Application.Responses;
 using Docman.API.Extensions;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate.Errors;
+using Docman.Domain.Extensions;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
@@ -46,10 +47,10 @@ namespace Docman.API.Controllers
                 return Validation<Error, UpdateDocumentCommand>.Success(updateCommand);
             };
 
-        private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEvent => async e =>
+        private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEventWithValidation => async evt =>
         {
-            await SaveAndPublishEventAsync(e);
-            return Validation<Error, Event>.Success(e);
+            await SaveAndPublishEventAsync(evt);
+            return Validation<Error, Event>.Success(evt);
         };
 
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
@@ -100,28 +101,30 @@ namespace Docman.API.Controllers
             var outcome =
                 from cmd in ValidateCreateCommand(command)
                 from evt in cmd.ToEvent(Guid.NewGuid()).AsTask()
-                from _ in SaveAndPublishEvent(evt)
+                from _ in SaveAndPublishEventWithValidation(evt)
                 select evt;
 
             return await outcome.Map(val => val.Match<IActionResult>(
                 Succ: evt => Created($"documents/{evt.EntityId}", null),
-                Fail: errors => BadRequest(string.Join(",", errors))));
+                Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
 
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Route("{id:guid}")]
-        public async Task<IActionResult> UpdateDocument(Guid id, [FromBody] UpdateDocumentCommand command)
+        public IActionResult UpdateDocument(Guid id, [FromBody] UpdateDocumentCommand command)
         {
-            return await ValidateUpdateCommand(command)
-                .BindT(c => GetDocumentFromEvents(id)
-                    .BindT(d => d.Update(c.Number, c.Description)))
-                .Do(val =>
-                    val.Do(res => SaveAndPublishEvent(res.Event)))
-                .Map(val => val.Match<IActionResult>(
-                    Succ: res => NoContent(),
-                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+            var outcome =
+                from cmd in ValidateUpdateCommand(command).Result
+                from doc in GetDocumentFromEvents(id).Result
+                from result in doc.Update(command.Number, command.Description)
+                from _ in SaveAndPublishEventWithValidation(result.Event).Result
+                select result.Document;
+
+            return outcome.Match<IActionResult>(
+                Succ: res => NoContent(),
+                Fail: errors => BadRequest(new { Errors = errors.Join() }));
         }
         
         [HttpPut]
@@ -130,13 +133,15 @@ namespace Docman.API.Controllers
         [Route("{id:guid}/approve")]
         public async Task<IActionResult> ApproveDocument(Guid id, [FromBody] ApproveDocumentCommand command)
         {
-            return await GetDocumentFromEvents(id)
-                .BindT(d => d.Approve(command.Comment))
-                .Do(val => 
-                    val.Do(res => SaveAndPublishEvent(res.Event)))
-                .Map(val => val.Match<IActionResult>(
-                    Succ: res => NoContent(),
-                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+            var outcome =
+                from doc in GetDocumentFromEvents(id)
+                from result in doc.Approve(command.Comment).AsTask()
+                from _ in SaveAndPublishEventWithValidation(result.Event)
+                select result.Document;
+
+            return await outcome.Map(val => val.Match<IActionResult>(
+                Succ: res => NoContent(),
+                Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
         
         [HttpPut]
@@ -145,13 +150,15 @@ namespace Docman.API.Controllers
         [Route("{id:guid}/reject")]
         public async Task<IActionResult> RejectDocument(Guid id, [FromBody] RejectDocumentCommand command)
         {
-            return await GetDocumentFromEvents(id)
-                .BindT(d => d.Reject(command.Reason))
-                .Do(val => 
-                    val.Do(res => SaveAndPublishEvent(res.Event)))
-                .Map(val => val.Match<IActionResult>(
-                    Succ: res => NoContent(),
-                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+            var outcome = 
+                from doc in GetDocumentFromEvents(id)
+                from result in doc.Reject(command.Reason).AsTask()
+                from _ in SaveAndPublishEventWithValidation(result.Event)
+                select result.Document;
+            
+            return await outcome.Map(val => val.Match<IActionResult>(
+                Succ: res => NoContent(),
+                Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
 
         [HttpPut]
@@ -160,13 +167,15 @@ namespace Docman.API.Controllers
         [Route("{id:guid}/send-for-approval")]
         public async Task<IActionResult> SendDocumentForApproval(Guid id)
         {
-            return await GetDocumentFromEvents(id)
-                .BindT(d => d.SendForApproval())
-                .Do(val => val
-                    .Do(res => SaveAndPublishEvent(res.Event)))
-                .Map(val => val.Match<IActionResult>(
-                    Succ: _ => NoContent(),
-                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+            var outcome = 
+                from doc in GetDocumentFromEvents(id)
+                from result in doc.SendForApproval().AsTask()
+                from _ in SaveAndPublishEventWithValidation(result.Event)
+                select result.Document;
+
+            return await outcome.Map(val => val.Match<IActionResult>(
+                Succ: res => NoContent(),
+                Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
     }
 }

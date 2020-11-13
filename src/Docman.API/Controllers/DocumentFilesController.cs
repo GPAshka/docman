@@ -5,6 +5,7 @@ using Docman.API.Application.Commands;
 using Docman.API.Application.Helpers;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
+using Docman.Domain.Extensions;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
@@ -17,21 +18,28 @@ namespace Docman.API.Controllers
     public class DocumentFilesController : ControllerBase
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
-        private readonly Func<Event, Task> SaveAndPublishEvent;
+        private readonly Func<Event, Task> SaveAndPublishEventAsync;
         private readonly DocumentRepository.GetFile GetFile;
         private readonly DocumentRepository.GetFiles GetFiles;
 
         public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Func<Event, Task> saveAndPublishEvent, DocumentRepository.GetFile getFile, DocumentRepository.GetFiles getFiles)
+            Func<Event, Task> saveAndPublishEventAsync, DocumentRepository.GetFile getFile,
+            DocumentRepository.GetFiles getFiles)
         {
             ReadEvents = readEvents;
-            SaveAndPublishEvent = saveAndPublishEvent;
+            SaveAndPublishEventAsync = saveAndPublishEventAsync;
             GetFile = getFile;
             GetFiles = getFiles;
         }
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
             id => HelperFunctions.GetDocumentFromEvents(ReadEvents, id);
+        
+        private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEventWithValidation => async evt =>
+        {
+            await SaveAndPublishEventAsync(evt);
+            return Validation<Error, Event>.Success(evt);
+        };
         
         [HttpGet]
         [Route("{fileId:guid}")]
@@ -61,14 +69,16 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AddFile(Guid documentId, [FromBody] AddFileCommand command)
         {
-            return await GetDocumentFromEvents(documentId)
-                .BindT(d => d.AddFile(Guid.NewGuid(), command.FileName, command.FileDescription))
-                .Do(val =>
-                    val.Do(res => SaveAndPublishEvent(res.Event)))
-                .Map(val => val.Match<IActionResult>(
-                    Succ: res =>
-                        Created($"documents/{documentId}/files/{res.Event?.FileId}", null),
-                    Fail: errors => BadRequest(new { Errors = string.Join(",", errors) })));
+            var outcome = 
+                from doc in GetDocumentFromEvents(documentId)
+                from result in doc.AddFile(Guid.NewGuid(), command.FileName, command.FileDescription).AsTask()
+                from _ in SaveAndPublishEventWithValidation(result.Event)
+                select result.Event;
+
+            return await outcome.Map(val => val.Match<IActionResult>(
+                Succ: evt =>
+                    Created($"documents/{documentId}/files/{evt.FileId}", null),
+                Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
     }
 }
