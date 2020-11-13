@@ -113,18 +113,24 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Route("{id:guid}")]
-        public IActionResult UpdateDocument(Guid id, [FromBody] UpdateDocumentCommand command)
+        public async Task<IActionResult> UpdateDocument(Guid id, [FromBody] UpdateDocumentCommand command)
         {
-            var outcome =
-                from cmd in ValidateUpdateCommand(command).Result
-                from doc in GetDocumentFromEvents(id).Result
-                from result in doc.Update(command.Number, command.Description)
-                from _ in SaveAndPublishEventWithValidation(result.Event).Result
-                select result.Document;
+            //More than three from clauses does not work, that's why two of them are combined to local helper function 
+            Task<Validation<Error, (UpdateDocumentCommand Command, Document Document)>> ValidateCommandAndGetDocument(
+                UpdateDocumentCommand cmd) =>
+                from c in ValidateUpdateCommand(cmd)
+                from doc in GetDocumentFromEvents(id)
+                select (c, doc);
 
-            return outcome.Match<IActionResult>(
+            var outcome =
+                from result in ValidateCommandAndGetDocument(command)
+                from docEvent in result.Document.Update(result.Command?.Number, result.Command?.Description).AsTask()
+                from _ in SaveAndPublishEventWithValidation(docEvent.Event)
+                select docEvent.Document;
+
+            return await outcome.Map(val => val.Match<IActionResult>(
                 Succ: res => NoContent(),
-                Fail: errors => BadRequest(new { Errors = errors.Join() }));
+                Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
         
         [HttpPut]

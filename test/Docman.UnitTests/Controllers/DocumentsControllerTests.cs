@@ -174,7 +174,7 @@ namespace Docman.UnitTests.Controllers
         }
         
         [Fact]
-        public void TestUpdateDocumentNoContentResult()
+        public async Task TestUpdateDocumentNoContentResult()
         {
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
@@ -186,7 +186,7 @@ namespace Docman.UnitTests.Controllers
                 new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
-            var result = _documentsController.UpdateDocument(Guid.Empty, command);
+            var result = await _documentsController.UpdateDocument(Guid.Empty, command);
             
             //Assert
             var noContentResult = result as NoContentResult; 
@@ -194,7 +194,7 @@ namespace Docman.UnitTests.Controllers
         }
         
         [Fact]
-        public void TestUpdateDocumentInvalidCommandBadRequestResult()
+        public async Task TestUpdateDocumentInvalidCommandBadRequestResult()
         {
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
@@ -206,7 +206,7 @@ namespace Docman.UnitTests.Controllers
                 new DocumentsController(readEventsFunc, Helper.SaveAndPublish, DocumentExistsByNumber, GetDocumentById);
             
             //Act
-            var result = _documentsController.UpdateDocument(Guid.Empty, command);
+            var result = await _documentsController.UpdateDocument(Guid.Empty, command);
             
             //Assert
             var badRequestResult = result as BadRequestObjectResult; 
@@ -215,7 +215,7 @@ namespace Docman.UnitTests.Controllers
         }
         
         [Fact]
-        public void TestUpdateDocumentDocumentExistsBadRequestResult()
+        public async Task TestUpdateDocumentDocumentExistsBadRequestResult()
         {
             //Arrange
             var documentCreatedDto = new DocumentCreatedEventDto
@@ -229,7 +229,7 @@ namespace Docman.UnitTests.Controllers
                 new DocumentsController(readEventsFunc, Helper.SaveAndPublish, documentExistsByNumber, GetDocumentById);
             
             //Act
-            var result = _documentsController.UpdateDocument(Guid.Empty, command);
+            var result = await _documentsController.UpdateDocument(Guid.Empty, command);
             
             //Assert
             var badRequestResult = result as BadRequestObjectResult; 
