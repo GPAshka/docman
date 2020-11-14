@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Docman.API.Application.Commands;
+using Docman.API.Application.Extensions;
 using Docman.API.Application.Helpers;
 using Docman.API.Application.Responses;
-using Docman.API.Extensions;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate.Errors;
 using Docman.Domain.Extensions;

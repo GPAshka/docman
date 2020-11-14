@@ -5,7 +5,7 @@ using Docman.Domain.DocumentAggregate;
 using Docman.Domain.DocumentAggregate.Events;
 using LanguageExt;
 
-namespace Docman.API.Extensions
+namespace Docman.API.Application.Extensions
 {
     public static class CommandExtensions
     {
