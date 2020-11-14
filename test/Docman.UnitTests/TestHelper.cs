@@ -6,7 +6,7 @@ using LanguageExt;
 
 namespace Docman.UnitTests
 {
-    public static class Helper
+    public static class TestHelper
     {
         public static Task SaveAndPublish(Event evt)
         {
