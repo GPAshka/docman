@@ -114,8 +114,8 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var documentId = Guid.NewGuid();
             var command = new AddFileCommand("test", "description");
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentFilesController =
@@ -156,8 +156,8 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var documentId = Guid.NewGuid();
             var command = new AddFileCommand(null, "test");
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentFilesController =
@@ -179,12 +179,9 @@ namespace Docman.UnitTests.Controllers
             var documentId = Guid.NewGuid();
             var command = new AddFileCommand("test", "test");
             
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var fileAddedDto = new FileAddedEventDto
-            {
-                Id = Guid.Empty, FileId = Guid.Empty, FileName = "test", TimeStamp = DateTime.UtcNow
-            };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
+            var fileAddedDto = new FileAddedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "test", string.Empty);
             var readEventsFunc =
                 TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
 

@@ -68,8 +68,8 @@ namespace Docman.UnitTests.Controllers
         public async Task TestGetDocumentHistoryOkResult()
         {
             //Arrange
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController =
@@ -177,8 +177,8 @@ namespace Docman.UnitTests.Controllers
         public async Task TestUpdateDocumentNoContentResult()
         {
             //Arrange
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
             
             var command = new UpdateDocumentCommand("1234", "test");
@@ -197,8 +197,8 @@ namespace Docman.UnitTests.Controllers
         public async Task TestUpdateDocumentInvalidCommandBadRequestResult()
         {
             //Arrange
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
             
             var command = new UpdateDocumentCommand(string.Empty, "test");
@@ -218,8 +218,8 @@ namespace Docman.UnitTests.Controllers
         public async Task TestUpdateDocumentDocumentExistsBadRequestResult()
         {
             //Arrange
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
             
             var command = new UpdateDocumentCommand("1234", "test");
@@ -241,14 +241,10 @@ namespace Docman.UnitTests.Controllers
         public async Task TestApproveDocumentNoContentResult()
         {
             //Arrange
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var fileAddedDto = new FileAddedEventDto
-            {
-                Id = Guid.Empty, FileId = Guid.Empty, FileName = "test", TimeStamp = DateTime.UtcNow
-            };
-            var documentSentToApprovalDto = new DocumentSentForApprovalEventDto
-                { Id = Guid.Empty, TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
+            var fileAddedDto = new FileAddedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "test", string.Empty);
+            var documentSentToApprovalDto = new DocumentSentForApprovalEventDto(Guid.Empty, DateTime.UtcNow);
 
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent(),
                 documentSentToApprovalDto.ToEvent());
@@ -290,8 +286,8 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var command = new ApproveDocumentCommand(null);
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController =
@@ -310,14 +306,10 @@ namespace Docman.UnitTests.Controllers
         public async Task TestRejectDocumentNoContentResult()
         {
             //Arrange
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var fileAddedDto = new FileAddedEventDto
-            {
-                Id = Guid.Empty, FileId = Guid.Empty, FileName = "test", TimeStamp = DateTime.UtcNow
-            };
-            var documentSentToApprovalDto = new DocumentSentForApprovalEventDto
-                { Id = Guid.Empty, TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
+            var fileAddedDto = new FileAddedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "test", string.Empty);
+            var documentSentToApprovalDto = new DocumentSentForApprovalEventDto(Guid.Empty, DateTime.UtcNow);
 
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent(), documentSentToApprovalDto.ToEvent());
 
@@ -358,8 +350,8 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var command = new RejectDocumentCommand(string.Empty);
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController =
@@ -378,12 +370,9 @@ namespace Docman.UnitTests.Controllers
         public async Task TestSendDocumentForApprovalNoContentResult()
         {
             //Arrange
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
-            var fileAddedDto = new FileAddedEventDto
-            {
-                Id = Guid.Empty, FileId = Guid.Empty, FileName = "test", TimeStamp = DateTime.UtcNow
-            };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
+            var fileAddedDto = new FileAddedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "test", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
 
             _documentsController =
@@ -401,8 +390,8 @@ namespace Docman.UnitTests.Controllers
         public async Task TestSendDocumentForApprovalNoFilesBadRequestResult()
         {
             //Arrange
-            var documentCreatedDto = new DocumentCreatedEventDto
-                { Id = Guid.Empty, Number = "1234", TimeStamp = DateTime.UtcNow };
+            var documentCreatedDto =
+                new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
             _documentsController =

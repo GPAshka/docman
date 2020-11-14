@@ -23,56 +23,40 @@ namespace Docman.API.Application.Extensions
             };
 
         private static DocumentCreatedEventDto ToDto(this DocumentCreatedEvent @event) =>
-            new DocumentCreatedEventDto
-            {
-                Id = @event.EntityId,
-                UserId = @event.UserId.Value,
-                Number = @event.Number.Value,
-                Description = @event.Description.Match(Some: d => d.Value, None: string.Empty),
-                TimeStamp = @event.TimeStamp
-            };
+            new DocumentCreatedEventDto(
+                @event.EntityId,
+                @event.TimeStamp, @event.UserId.Value, @event.Number.Value, @event.Description.Match(Some: d => d.Value, None: string.Empty));
 
         private static DocumentApprovedEventDto ToDto(this DocumentApprovedEvent @event) =>
-            new DocumentApprovedEventDto
-            {
-                Id = @event.EntityId,
-                Comment = @event.Comment.Value,
-                TimeStamp = @event.TimeStamp
-            };
+            new DocumentApprovedEventDto(
+                @event.EntityId,
+                @event.TimeStamp, @event.Comment.Value);
 
         private static FileAddedEventDto ToDto(this FileAddedEvent @event) =>
-            new FileAddedEventDto
-            {
-                Id = @event.EntityId,
-                FileId = @event.FileId.Value,
-                FileName = @event.Name.Value,
-                FileDescription = @event.Description.Match(d => d.Value, string.Empty),
-                TimeStamp = @event.TimeStamp
-            };
+            new FileAddedEventDto(
+                @event.EntityId,
+                @event.TimeStamp,
+                @event.FileId.Value,
+                @event.Name.Value,
+                @event.Description.Match(d => d.Value, string.Empty));
 
         private static DocumentSentForApprovalEventDto ToDto(this DocumentSentForApprovalEvent @event) =>
-            new DocumentSentForApprovalEventDto
-            {
-                Id = @event.EntityId,
-                TimeStamp = @event.TimeStamp
-            };
+            new DocumentSentForApprovalEventDto(
+                @event.EntityId,
+                @event.TimeStamp);
 
         private static DocumentRejectedEventDto ToDto(this DocumentRejectedEvent @event) =>
-            new DocumentRejectedEventDto
-            {
-                Id = @event.EntityId,
-                Reason = @event.Reason.Value,
-                TimeStamp = @event.TimeStamp
-            };
+            new DocumentRejectedEventDto(
+                @event.EntityId,
+                @event.TimeStamp,
+                @event.Reason.Value);
 
         private static DocumentUpdatedEventDto ToDto(this DocumentUpdatedEvent @event) =>
-            new DocumentUpdatedEventDto
-            {
-                Id = @event.EntityId,
-                Number = @event.Number.Value,
-                Description = @event.Description.Match(d => d.Value, string.Empty),
-                TimeStamp = @event.TimeStamp
-            };
+            new DocumentUpdatedEventDto(
+                @event.EntityId,
+                @event.TimeStamp,
+                @event.Number.Value,
+                @event.Description.Match(d => d.Value, string.Empty));
 
         public static Validation<Error, Event> ToEvent(this DocumentCreatedEventDto dto) =>
             DocumentNumber.Create(dto.Number)
