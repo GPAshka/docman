@@ -79,7 +79,7 @@ namespace Docman.API.Infrastructure
             var mediator = _serviceProvider.GetRequiredService<IMediator>();
             
             var saveEvent = par(EventStoreHelper.SaveEvent, _eventStoreConnectionString);
-            return par(HelperFunctions.SaveAndPublish, async dto => await saveEvent(dto),
+            return par(EventHelper.SaveAndPublish, async dto => await saveEvent(dto),
                 async dto => await mediator.Publish(dto));
         }
     }
