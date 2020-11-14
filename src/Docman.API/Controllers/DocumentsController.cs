@@ -27,7 +27,7 @@ namespace Docman.API.Controllers
         private readonly DocumentRepository.GetDocumentById _getDocumentById;
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
-            id => HelperFunctions.GetDocumentFromEvents(_readEvents, id);
+            id => DocumentHelper.GetDocumentFromEvents(_readEvents, id);
 
         private Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> ValidateCreateCommand =>
             async createCommand =>

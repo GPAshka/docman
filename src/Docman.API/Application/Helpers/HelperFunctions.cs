@@ -18,12 +18,5 @@ namespace Docman.API.Application.Helpers
                 await saveEvent(eventDto);
                 await publishEvent(eventDto);
             };
-
-        public static
-            Func<Func<Guid, Task<Validation<Error, IEnumerable<Event>>>>, Guid, Task<Validation<Error, Document>>>
-            GetDocumentFromEvents =>
-            async (readEventsFunc, documentId) =>
-                await readEventsFunc(documentId)
-                    .BindT(events => DocumentHelper.From(events, documentId));
     }
 }

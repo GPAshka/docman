@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.DocumentAggregate.Errors;
@@ -67,9 +68,15 @@ namespace Docman.API.Application.Helpers
 
         public static Validation<Error, (Document Document, DocumentSentForApprovalEvent Event)> SendForApproval(
             this Document document) =>
-            Validation<Error, DocumentSentForApprovalEvent>
-                .Success(new DocumentSentForApprovalEvent(document.Id))
+            Validation<Error, DocumentSentForApprovalEvent>.Success(new DocumentSentForApprovalEvent(document.Id))
                 .Bind(evt => document.Apply(evt)
                     .Map(doc => (doc, evt)));
+
+        public static
+            Func<Func<Guid, Task<Validation<Error, IEnumerable<Event>>>>, Guid, Task<Validation<Error, Document>>>
+            GetDocumentFromEvents =>
+            async (readEventsFunc, documentId) =>
+                await readEventsFunc(documentId)
+                    .BindT(events => DocumentHelper.From(events, documentId));
     }
 }

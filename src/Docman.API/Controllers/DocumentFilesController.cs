@@ -33,7 +33,7 @@ namespace Docman.API.Controllers
         }
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
-            id => HelperFunctions.GetDocumentFromEvents(_readEvents, id);
+            id => DocumentHelper.GetDocumentFromEvents(_readEvents, id);
         
         private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEventWithValidation => async evt =>
         {
