@@ -11,20 +11,20 @@ namespace Docman.API.Application.EventHandlers
 {
     public class AddDocumentToDatabaseWhenCreatedEventHandler : INotificationHandler<DocumentCreatedEventDto>
     {
-        private readonly DocumentRepository.AddDocument AddDocument;
+        private readonly DocumentRepository.AddDocument _addDocument;
         private readonly ILogger<AddDocumentToDatabaseWhenCreatedEventHandler> _logger;
 
         public AddDocumentToDatabaseWhenCreatedEventHandler(DocumentRepository.AddDocument addDocument,
             ILogger<AddDocumentToDatabaseWhenCreatedEventHandler> logger)
         {
-            AddDocument = addDocument;
+            _addDocument = addDocument;
             _logger = logger;
         }
 
         public async Task Handle(DocumentCreatedEventDto notification, CancellationToken cancellationToken)
         {
             TryAsync<Unit> handle = async () =>
-                await AddDocument(notification.Id, notification.UserId, notification.Number, notification.Description)
+                await _addDocument(notification.Id, notification.UserId, notification.Number, notification.Description)
                     .ToUnit();
 
             await handle.Match(

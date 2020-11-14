@@ -17,27 +17,27 @@ namespace Docman.API.Controllers
     [Route("documents/{documentId:guid}/files")]
     public class DocumentFilesController : ControllerBase
     {
-        private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
-        private readonly Func<Event, Task> SaveAndPublishEventAsync;
-        private readonly DocumentRepository.GetFile GetFile;
-        private readonly DocumentRepository.GetFiles GetFiles;
+        private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> _readEvents;
+        private readonly Func<Event, Task> _saveAndPublishEventAsync;
+        private readonly DocumentRepository.GetFile _getFile;
+        private readonly DocumentRepository.GetFiles _getFiles;
 
         public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
             Func<Event, Task> saveAndPublishEventAsync, DocumentRepository.GetFile getFile,
             DocumentRepository.GetFiles getFiles)
         {
-            ReadEvents = readEvents;
-            SaveAndPublishEventAsync = saveAndPublishEventAsync;
-            GetFile = getFile;
-            GetFiles = getFiles;
+            _readEvents = readEvents;
+            _saveAndPublishEventAsync = saveAndPublishEventAsync;
+            _getFile = getFile;
+            _getFiles = getFiles;
         }
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
-            id => HelperFunctions.GetDocumentFromEvents(ReadEvents, id);
+            id => HelperFunctions.GetDocumentFromEvents(_readEvents, id);
         
         private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEventWithValidation => async evt =>
         {
-            await SaveAndPublishEventAsync(evt);
+            await _saveAndPublishEventAsync(evt);
             return Validation<Error, Event>.Success(evt);
         };
         
@@ -47,7 +47,7 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetFileAsync(Guid documentId, Guid fileId)
         {
-            return await GetFile(documentId, fileId)
+            return await _getFile(documentId, fileId)
                 .MapT(ResponseHelper.GenerateFileResponse)
                 .Map(file =>
                     file.Match<IActionResult>(
@@ -59,7 +59,7 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetFilesAsync(Guid documentId)
         {
-            return await GetFiles(documentId)
+            return await _getFiles(documentId)
                 .MapT(ResponseHelper.GenerateFileResponse)
                 .Map(Ok);
         }

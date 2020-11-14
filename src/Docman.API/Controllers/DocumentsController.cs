@@ -21,18 +21,18 @@ namespace Docman.API.Controllers
     [Route("[controller]")]
     public class DocumentsController : ControllerBase
     {
-        private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEvents;
-        private readonly Func<Event, Task> SaveAndPublishEventAsync;
-        private readonly DocumentRepository.DocumentExistsByNumber DocumentExistsByNumber;
+        private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> _readEvents;
+        private readonly Func<Event, Task> _saveAndPublishEventAsync;
+        private readonly DocumentRepository.DocumentExistsByNumber _documentExistsByNumber;
         private readonly DocumentRepository.GetDocumentById _getDocumentById;
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
-            id => HelperFunctions.GetDocumentFromEvents(ReadEvents, id);
+            id => HelperFunctions.GetDocumentFromEvents(_readEvents, id);
 
         private Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> ValidateCreateCommand =>
             async createCommand =>
             {
-                if (await DocumentExistsByNumber(createCommand.Number))
+                if (await _documentExistsByNumber(createCommand.Number))
                     return new DocumentWithNumberExistsError(createCommand.Number);
 
                 return Validation<Error, CreateDocumentCommand>.Success(createCommand);
@@ -41,7 +41,7 @@ namespace Docman.API.Controllers
         private Func<UpdateDocumentCommand, Task<Validation<Error, UpdateDocumentCommand>>> ValidateUpdateCommand =>
             async updateCommand =>
             {
-                if (await DocumentExistsByNumber(updateCommand.Number))
+                if (await _documentExistsByNumber(updateCommand.Number))
                     return new DocumentWithNumberExistsError(updateCommand.Number);
 
                 return Validation<Error, UpdateDocumentCommand>.Success(updateCommand);
@@ -49,7 +49,7 @@ namespace Docman.API.Controllers
 
         private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEventWithValidation => async evt =>
         {
-            await SaveAndPublishEventAsync(evt);
+            await _saveAndPublishEventAsync(evt);
             return Validation<Error, Event>.Success(evt);
         };
 
@@ -57,9 +57,9 @@ namespace Docman.API.Controllers
             Func<Event, Task> saveAndPublishEventAsync, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
             DocumentRepository.GetDocumentById getDocumentById)
         {
-            SaveAndPublishEventAsync = saveAndPublishEventAsync;
-            ReadEvents = readEvents;
-            DocumentExistsByNumber = documentExistsByNumber;
+            _saveAndPublishEventAsync = saveAndPublishEventAsync;
+            _readEvents = readEvents;
+            _documentExistsByNumber = documentExistsByNumber;
             _getDocumentById = getDocumentById;
         }
 
@@ -82,7 +82,7 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetDocumentHistory(Guid documentId)
         {
-            return await ReadEvents(documentId)
+            return await _readEvents(documentId)
                 .MapT(events => events.Match(
                     Empty: () => None,
                     More: otherEvents => Some(ResponseHelper.EventsToDocumentHistory(otherEvents))))
