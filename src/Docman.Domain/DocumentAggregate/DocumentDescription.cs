@@ -1,18 +1,17 @@
 using System.Runtime.Serialization;
+using Docman.Domain.DocumentAggregate.Errors;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
 {
     public class DocumentDescription : NewType<DocumentDescription, string>
     {
+        public const int MaxLength = 200;
+        
         private DocumentDescription(string value) : base(value)
         {
         }
 
-        public DocumentDescription(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-        
         public static implicit operator DocumentDescription(string str) => New(str);
         
         public static Validation<Error, Option<DocumentDescription>> Create(string value)
@@ -20,8 +19,8 @@ namespace Docman.Domain.DocumentAggregate
             if (string.IsNullOrEmpty(value))
                 return Option<DocumentDescription>.None;
 
-            return value.Length >= 100
-                ? new Error("Document description should not be larger than 100")
+            return value.Length >= MaxLength
+                ? new LongValueError("Document description", MaxLength)
                 : Validation<Error, Option<DocumentDescription>>.Success(Option<DocumentDescription>.Some(value));
         }
     }

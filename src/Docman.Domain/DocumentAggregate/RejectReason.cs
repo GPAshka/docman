@@ -1,3 +1,4 @@
+using Docman.Domain.DocumentAggregate.Errors;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
@@ -11,7 +12,7 @@ namespace Docman.Domain.DocumentAggregate
         public static Validation<Error, RejectReason> Create(string value)
         {
             if (string.IsNullOrEmpty(value))
-                return new Error("Reject reason should not be empty");
+                return new EmptyValueError("Reject reason");
 
             return new RejectReason(value);
         }

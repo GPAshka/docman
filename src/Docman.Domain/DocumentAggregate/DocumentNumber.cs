@@ -1,4 +1,5 @@
 using System.Runtime.Serialization;
+using Docman.Domain.DocumentAggregate.Errors;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
@@ -16,7 +17,7 @@ namespace Docman.Domain.DocumentAggregate
         public static Validation<Error, DocumentNumber> Create(string value)
         {
             if (string.IsNullOrEmpty(value))
-                return new Error("Document number should not be empty");
+                return new EmptyValueError("Document number");
 
             return new DocumentNumber(value);
         }
