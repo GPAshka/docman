@@ -175,7 +175,7 @@ namespace Docman.API.Controllers
         {
             var outcome = 
                 from doc in GetDocumentFromEvents(id)
-                from result in doc.SendForApproval().AsTask()
+                from result in DocumentHelper.SendForApproval(doc).AsTask()
                 from _ in SaveAndPublishEventWithValidation(result.Event)
                 select result.Document;
 

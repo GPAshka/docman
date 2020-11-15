@@ -13,8 +13,7 @@ namespace Docman.API.Application.Helpers
     public static class DocumentHelper
     {
         private static Document CreateDocument(this DocumentCreatedEvent evt)
-            => new Document(new DocumentId(evt.EntityId), evt.UserId, evt.Number, evt.Description,
-                DocumentStatus.Draft);
+            => new Document(new DocumentId(evt.EntityId), evt.UserId, evt.Number, evt.Description);
 
         private static Validation<Error, Document> Apply(this Document document, Event evt)
         {
@@ -23,7 +22,7 @@ namespace Docman.API.Application.Helpers
                 DocumentApprovedEvent approvedEvent => document.Approve(approvedEvent.Comment),
                 FileAddedEvent fileAddedEvent => document.AddFile(fileAddedEvent.FileId, fileAddedEvent.Name,
                     fileAddedEvent.Description),
-                DocumentSentForApprovalEvent _ => document.WaitingForApproval(),
+                DocumentSentForApprovalEvent _ => document.SendForApproval(),
                 DocumentRejectedEvent rejectedEvent => document.Reject(rejectedEvent.Reason),
                 DocumentUpdatedEvent updatedEvent => document.Update(updatedEvent.Number, updatedEvent.Description),
                 _ => new Error($"Unknown event type: {evt.GetType().Name}")

@@ -24,9 +24,9 @@ namespace Docman.Domain.DocumentAggregate
             Status = status;
             Files = files;
         }
-        
-        public Document(DocumentId id, UserId userId, DocumentNumber number, Option<DocumentDescription> description,
-            DocumentStatus status) : this(id, userId, number, description, status, new List<File>())
+
+        public Document(DocumentId id, UserId userId, DocumentNumber number, Option<DocumentDescription> description) :
+            this(id, userId, number, description, DocumentStatus.Draft, new List<File>())
         {
         }
 
@@ -43,7 +43,7 @@ namespace Docman.Domain.DocumentAggregate
             return WithFiles(newFiles);
         }
 
-        public Validation<Error, Document> WaitingForApproval()
+        public Validation<Error, Document> SendForApproval()
         {
             if (Status != DocumentStatus.Draft)
                 return new InvalidStatusError(DocumentStatus.Draft, Status);
