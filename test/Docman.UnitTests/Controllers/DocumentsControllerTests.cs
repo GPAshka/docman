@@ -23,7 +23,8 @@ namespace Docman.UnitTests.Controllers
             number => Task.FromResult(false);
 
         private static DocumentRepository.GetDocumentById GetDocumentById =>
-            documentId => Task.FromResult(Some(new DocumentDatabaseDto { Id = documentId }));
+            documentId => Task.FromResult(Some(new DocumentDatabaseDto(documentId, Guid.Empty, string.Empty,
+                string.Empty, string.Empty, null, null, DateTime.UtcNow)));
 
         [Fact]
         public async Task TestGetOkResult()
@@ -285,7 +286,7 @@ namespace Docman.UnitTests.Controllers
         public async Task TestApproveDocumentInvalidCommandBadRequestResult()
         {
             //Arrange
-            var command = new ApproveDocumentCommand(null);
+            var command = new ApproveDocumentCommand(string.Empty);
             var documentCreatedDto =
                 new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());

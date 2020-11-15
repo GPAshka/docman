@@ -21,12 +21,13 @@ namespace Docman.UnitTests.Controllers
         private DocumentFilesController _documentFilesController;
 
         private static DocumentRepository.GetFile GetFile =>
-            (documentId, fileId) => Task.FromResult(Some(new FileDatabaseDto { Id = fileId, DocumentId = documentId }));
+            (documentId, fileId) =>
+                Task.FromResult(Some(new FileDatabaseDto(fileId, documentId, string.Empty, string.Empty)));
 
         private static DocumentRepository.GetFiles GetFiles => documentId =>
         {
             IEnumerable<FileDatabaseDto> files = new List<FileDatabaseDto>
-                { new FileDatabaseDto { DocumentId = documentId } };
+                { new FileDatabaseDto(Guid.Empty, documentId, string.Empty, string.Empty) };
             return Task.FromResult(files);
         };
 
@@ -155,7 +156,7 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var documentId = Guid.NewGuid();
-            var command = new AddFileCommand(null, "test");
+            var command = new AddFileCommand(string.Empty, "test");
             var documentCreatedDto =
                 new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
