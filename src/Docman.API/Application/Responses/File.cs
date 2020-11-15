@@ -1,12 +1,21 @@
 using System;
+using LanguageExt;
 
 namespace Docman.API.Application.Responses
 {
-    public class File
+    public class File : Record<File>
     {
-        public Guid Id { get; set; }
-        public Guid DocumentId { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public Guid Id { get; }
+        public Guid DocumentId { get; }
+        public string Name { get; }
+        public string Description { get; }
+        
+        public File(Guid id, Guid documentId, string name, string description)
+        {
+            Id = id;
+            DocumentId = documentId;
+            Name = name;
+            Description = description;
+        }
     }
 }

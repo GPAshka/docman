@@ -1,15 +1,17 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Docman.Domain;
-using Docman.Domain.DocumentAggregate;
-using Docman.Domain.DocumentAggregate.Events;
+using LanguageExt;
 
 namespace Docman.API.Application.Responses
 {
-    public class DocumentHistory
+    public class DocumentHistory : Record<DocumentHistory>
     {
-        public string Status { get; set; }
-        public DateTime TimeStamp { get; set; }
+        public string Status { get; }
+        public DateTime TimeStamp { get; }
+        
+        public DocumentHistory(string status, DateTime timeStamp)
+        {
+            Status = status;
+            TimeStamp = timeStamp;
+        }
     }
 }

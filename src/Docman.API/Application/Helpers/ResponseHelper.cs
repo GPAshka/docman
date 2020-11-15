@@ -11,25 +11,21 @@ namespace Docman.API.Application.Helpers
     public static class ResponseHelper
     {
         public static Responses.Document GenerateDocumentResponse(
-            DocumentDatabaseDto documentDatabaseDto) => new Responses.Document
-        {
-            Id = documentDatabaseDto.Id,
-            UserId = documentDatabaseDto.UserId,
-            Number = documentDatabaseDto.Number,
-            Description = documentDatabaseDto.Description,
-            Status = documentDatabaseDto.Status,
-            ApprovalComment = documentDatabaseDto.ApprovalComment,
-            RejectReason = documentDatabaseDto.RejectReason,
-        };
+            DocumentDatabaseDto documentDatabaseDto) => new Responses.Document(
+            documentDatabaseDto.Id,
+            documentDatabaseDto.UserId,
+            documentDatabaseDto.Number,
+            documentDatabaseDto.Description,
+            documentDatabaseDto.Status,
+            documentDatabaseDto.ApprovalComment,
+            documentDatabaseDto.RejectReason);
 
         public static Responses.File GenerateFileResponse(FileDatabaseDto fileDatabaseDto) =>
-            new Responses.File
-            {
-                Id = fileDatabaseDto.Id,
-                DocumentId = fileDatabaseDto.DocumentId,
-                Name = fileDatabaseDto.Name,
-                Description = fileDatabaseDto.Description
-            };
+            new Responses.File(
+                fileDatabaseDto.Id,
+                fileDatabaseDto.DocumentId,
+                fileDatabaseDto.Name,
+                fileDatabaseDto.Description);
 
         public static IEnumerable<DocumentHistory> EventsToDocumentHistory(IEnumerable<Event> events) =>
             events
@@ -37,11 +33,9 @@ namespace Docman.API.Application.Helpers
                 .Where(h => h.Status != string.Empty);
 
         private static DocumentHistory ToDocumentHistory(Event @event)
-            => new DocumentHistory
-            {
-                Status = GetStatusForEvent(@event),
-                TimeStamp = @event.TimeStamp
-            };
+            => new DocumentHistory(
+                GetStatusForEvent(@event),
+                @event.TimeStamp);
 
         private static string GetStatusForEvent(Event @event)
             => @event switch
