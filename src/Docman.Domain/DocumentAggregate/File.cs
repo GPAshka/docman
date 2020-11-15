@@ -3,7 +3,7 @@ using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
 {
-    public class File
+    public class File : Record<File>
     {
         public FileId Id { get; }
         public FileName Name { get; }

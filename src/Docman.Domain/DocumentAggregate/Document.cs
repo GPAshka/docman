@@ -40,7 +40,7 @@ namespace Docman.Domain.DocumentAggregate
 
             var file = new File(id, name, description);
             var newFiles = new List<File>(Files) { file };
-            return new Document(Id, UserId, Number, Description, Status, newFiles);
+            return WithFiles(newFiles);
         }
 
         public Validation<Error, Document> WaitingForApproval()
@@ -75,10 +75,18 @@ namespace Docman.Domain.DocumentAggregate
             if (Status != DocumentStatus.Draft)
                 return new InvalidStatusError(DocumentStatus.Draft, Status);
 
-            return new Document(Id, UserId, number, description, Status, Files);
+            return WithNumber(number).WithDescription(description);
         }
 
         private Document WithStatus(DocumentStatus status) =>
             new Document(Id, UserId, Number, Description, status, Files);
+
+        private Document WithFiles(List<File> files) => new Document(Id, UserId, Number, Description, Status, files);
+
+        private Document WithNumber(DocumentNumber number) =>
+            new Document(Id, UserId, number, Description, Status, Files);
+
+        private Document WithDescription(Option<DocumentDescription> description) =>
+            new Document(Id, UserId, Number, description, Status, Files);
     }
 }
