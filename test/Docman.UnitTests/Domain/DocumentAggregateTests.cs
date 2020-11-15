@@ -11,12 +11,91 @@ namespace Docman.UnitTests.Domain
     public class DocumentAggregateTests
     {
         [Fact]
+        public void CreateDocumentTest()
+        {
+            var document = CreateDocument("1234", "Test Document");
+            
+            document.Match(
+                Succ: doc =>
+                {
+                    Assert.Equal("1234", doc.Number.Value);
+                    Assert.Equal(DocumentStatus.Draft, doc.Status);
+
+                    doc.Description.Match(
+                        Some: desc => Assert.Equal("Test Document", desc.Value),
+                        None: () => Assert.True(false, "Should never get here"));
+                },
+                Fail: errors => Assert.True(false, "Should never get here"));
+        }
+        
+        [Fact]
+        public void CreateDocumentEmptyDescriptionTest()
+        {
+            var document = CreateDocument("123", string.Empty);
+            
+            document.Match(
+                Succ: doc =>
+                {
+                    Assert.Equal("123", doc.Number.Value);
+                    Assert.Equal(DocumentStatus.Draft, doc.Status);
+
+                    doc.Description.Match(
+                        Some: _ => Assert.True(false, "Should never get here"),
+                        None: () => Assert.True(true));
+                },
+                Fail: errors => Assert.True(false, "Should never get here"));
+        }
+        
+        [Fact]
+        public void CreateDocumentInvalidNumberErrorTest()
+        {
+            var document = CreateDocument(string.Empty, "Test Document");
+            
+            document.Match(
+                Succ: _ => Assert.True(false, "Should never get here"),
+                Fail: errors =>
+                {
+                    Assert.True(errors.Count == 1);
+                    Assert.True(errors.Head.Equals(new EmptyValueError("Document number")));
+                });
+        }
+        
+        [Fact]
+        public void CreateDocumentInvalidDescriptionErrorTest()
+        {
+            var document = CreateDocument("123",
+                new string(Enumerable.Repeat('t', DocumentDescription.MaxLength + 1).ToArray()));
+            
+            document.Match(
+                Succ: _ => Assert.True(false, "Should never get here"),
+                Fail: errors =>
+                {
+                    Assert.True(errors.Count == 1);
+                    Assert.True(errors.Head.Equals(new LongValueError("Document description",
+                        DocumentDescription.MaxLength)));
+                });
+        }
+        
+        [Fact]
         public void AddFileSuccessTest()
         {
             var document = CreateDocument()
-                .Bind(doc => AddFile(doc));
+                .Bind(doc => AddFile(doc, "123", "Test File"));
             
-            Assert.True(document.IsSuccess);
+            document.Match(
+                Succ: doc =>
+                {
+                    Assert.NotNull(doc.Files);
+                    Assert.NotEmpty(doc.Files);
+                    Assert.Equal(1, doc.Files.Count());
+                    Assert.Equal("123", doc.Files.First().Name.Value);
+                    Assert.Equal(DocumentStatus.Draft, doc.Status);
+
+                    doc.Files.First().Description.Match(
+                        Some: desc => Assert.Equal("Test File", desc.Value),
+                        None: () => Assert.True(false, "Should never get here"));
+                },
+                Fail: errors => Assert.True(false, "Should never get here"));
         }
         
         [Fact]
@@ -24,8 +103,7 @@ namespace Docman.UnitTests.Domain
         {
             var document = CreateDocument()
                 .Bind(doc => AddFile(doc, string.Empty, "TestFile"));
-
-            Assert.True(document.IsFail);
+            
             document.Match(
                 Succ: _ => Assert.True(false, "Should never get here"),
                 Fail: errors =>
@@ -57,7 +135,17 @@ namespace Docman.UnitTests.Domain
             var document = CreateDocument()
                 .Bind(doc => AddFile(doc, "123", string.Empty));
 
-            Assert.True(document.IsSuccess);
+            document.Match(
+                Succ: doc =>
+                {
+                    Assert.NotNull(doc.Files);
+                    Assert.NotEmpty(doc.Files);
+                    Assert.Equal(1, doc.Files.Count());
+                    Assert.Equal("123", doc.Files.First().Name.Value);
+                    Assert.True(doc.Files.First().Description.IsNone);
+                    Assert.Equal(DocumentStatus.Draft, doc.Status);
+                },
+                Fail: errors => Assert.True(false, "Should never get here"));
         }
         
         [Fact]
@@ -102,7 +190,9 @@ namespace Docman.UnitTests.Domain
                 .Bind(doc => AddFile(doc, "123"))
                 .Bind(doc => doc.SendForApproval());
 
-            Assert.True(document.IsSuccess);
+            document.Match(
+                Succ: doc => Assert.Equal(DocumentStatus.WaitingForApproval, doc.Status),
+                Fail: errors => Assert.True(false, "Should never get here"));
         }
         
         [Fact]
@@ -135,6 +225,104 @@ namespace Docman.UnitTests.Domain
                     Assert.True(errors.Count == 1);
                     Assert.True(errors.Head.Equals(new InvalidStatusError(DocumentStatus.Draft,
                         DocumentStatus.WaitingForApproval)));
+                });
+        }
+        
+        [Fact]
+        public void ApproveTest()
+        {
+            var document = CreateDocument()
+                .Bind(doc => AddFile(doc, "123"))
+                .Bind(doc => doc.SendForApproval())
+                .Bind(doc => Comment.Create("Approved")
+                    .Bind(doc.Approve));
+
+            document.Match(
+                Succ: doc => Assert.Equal(DocumentStatus.Approved, doc.Status),
+                Fail: errors => Assert.True(false, "Should never get here"));
+        }
+        
+        [Fact]
+        public void ApproveInvalidDocumentStatusErrorTest()
+        {
+            var document = CreateDocument()
+                .Bind(doc => AddFile(doc, "123"))
+                .Bind(doc => Comment.Create("Approved")
+                    .Bind(doc.Approve));
+
+            document.Match(
+                Succ: _ => Assert.True(false, "Should never get here"),
+                Fail: errors =>
+                {
+                    Assert.True(errors.Count == 1);
+                    Assert.True(errors.Head.Equals(new InvalidStatusError(DocumentStatus.WaitingForApproval,
+                        DocumentStatus.Draft)));
+                });
+        }
+        
+        [Fact]
+        public void ApproveEmptyCommentErrorTest()
+        {
+            var document = CreateDocument()
+                .Bind(doc => AddFile(doc, "123"))
+                .Bind(doc => Comment.Create(string.Empty)
+                    .Bind(doc.Approve));
+
+            document.Match(
+                Succ: _ => Assert.True(false, "Should never get here"),
+                Fail: errors =>
+                {
+                    Assert.True(errors.Count == 1);
+                    Assert.True(errors.Head.Equals(new EmptyValueError("Comment")));
+                });
+        }
+        
+        [Fact]
+        public void RejectTest()
+        {
+            var document = CreateDocument()
+                .Bind(doc => AddFile(doc, "123"))
+                .Bind(doc => doc.SendForApproval())
+                .Bind(doc => RejectReason.Create("Rejected")
+                    .Bind(doc.Reject));
+
+            document.Match(
+                Succ: doc => Assert.Equal(DocumentStatus.Rejected, doc.Status),
+                Fail: errors => Assert.True(false, "Should never get here"));
+        }
+        
+        [Fact]
+        public void RejectInvalidDocumentStatusErrorTest()
+        {
+            var document = CreateDocument()
+                .Bind(doc => AddFile(doc, "123"))
+                .Bind(doc => RejectReason.Create("Rejected")
+                    .Bind(doc.Reject));
+
+            document.Match(
+                Succ: _ => Assert.True(false, "Should never get here"),
+                Fail: errors =>
+                {
+                    Assert.True(errors.Count == 1);
+                    Assert.True(errors.Head.Equals(new InvalidStatusError(DocumentStatus.WaitingForApproval,
+                        DocumentStatus.Draft)));
+                });
+        }
+        
+        [Fact]
+        public void RejectEmptyReasonErrorTest()
+        {
+            var document = CreateDocument()
+                .Bind(doc => AddFile(doc, "123"))
+                .Bind(doc => RejectReason.Create(string.Empty)
+                    .Bind(doc.Reject));
+
+            document.Match(
+                Succ: _ => Assert.True(false, "Should never get here"),
+                Fail: errors =>
+                {
+                    Assert.True(errors.Count == 1);
+                    Assert.True(errors.Head.Equals(new EmptyValueError("Reject reason")));
                 });
         }
         
