@@ -1,3 +1,4 @@
+using Docman.Domain.DocumentAggregate.Errors;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
@@ -11,7 +12,7 @@ namespace Docman.Domain.DocumentAggregate
         public static Validation<Error, FileName> Create(string value)
         {
             if (string.IsNullOrEmpty(value))
-                return new Error("File name should not be empty");
+                return new EmptyValueError("File name");
 
             return new FileName(value);
         }

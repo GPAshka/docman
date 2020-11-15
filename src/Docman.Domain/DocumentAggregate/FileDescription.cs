@@ -1,9 +1,12 @@
+using Docman.Domain.DocumentAggregate.Errors;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
 {
     public class FileDescription : NewType<FileDescription, string>
     {
+        public const int MaxLength = 250;
+        
         private FileDescription(string value) : base(value)
         {
         }
@@ -13,8 +16,8 @@ namespace Docman.Domain.DocumentAggregate
             if (string.IsNullOrEmpty(value))
                 return Option<FileDescription>.None;
 
-            if (value.Length >= 250)
-                return new Error("File description should not be larger than 250");
+            if (value.Length >= MaxLength)
+                return new LongValueError("File description", MaxLength);
 
             return Option<FileDescription>.Some(new FileDescription(value));
         }
