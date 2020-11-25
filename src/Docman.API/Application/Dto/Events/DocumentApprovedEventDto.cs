@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Docman.API.Application.Dto.Events
 {
-    public class DocumentApprovedEventDto : EventDto, INotification
+    public record DocumentApprovedEventDto : EventDto, INotification
     {
         public string Comment { get; }
 

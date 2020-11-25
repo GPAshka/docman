@@ -1,17 +1,12 @@
 using System;
-using LanguageExt;
 
 namespace Docman.API.Application.Dto
 {
-    public class EventDto : Record<EventDto>
+    public record EventDto
     {
         public Guid Id { get; }
         public DateTime TimeStamp { get; }
-        
-        protected EventDto(Guid id, DateTime timeStamp)
-        {
-            Id = id;
-            TimeStamp = timeStamp;
-        }
+
+        protected EventDto(Guid id, DateTime timeStamp) => (Id, TimeStamp) = (id, timeStamp);
     }
 }
