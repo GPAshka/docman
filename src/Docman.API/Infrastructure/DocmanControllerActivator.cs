@@ -14,18 +14,20 @@ using static LanguageExt.Prelude;
 
 namespace Docman.API.Infrastructure
 {
-    public class DocumentsControllerActivator : IControllerActivator
+    public class DocmanControllerActivator : IControllerActivator
     {
         private readonly IServiceProvider _serviceProvider;
 
+        private readonly IConfiguration _configuration;
         private readonly string _eventStoreConnectionString;
         private readonly string _postgresConnectionString;
         
-        public DocumentsControllerActivator(IConfiguration configuration, IServiceProvider serviceProvider)
+        public DocmanControllerActivator(IConfiguration configuration, IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             
             //TODO catch exceptions while reading configuration
+            _configuration = configuration;
             _eventStoreConnectionString = configuration["EventStoreConnectionString"];
             _postgresConnectionString = configuration["PostgreSqlConnectionString"];
         }
@@ -36,10 +38,14 @@ namespace Docman.API.Infrastructure
 
             if (type == typeof(DocumentsController))
                 return NewDocumentsController();
+
+            if (type == typeof(UsersController))
+                return NewUsersController();
+
+            if (type == typeof(DocumentFilesController))
+                return NewDocumentFilesController();
             
-            return type == typeof(DocumentFilesController)
-                ? NewDocumentFilesController()
-                : Activator.CreateInstance(type);
+            return Activator.CreateInstance(type)!;
         }
 
         public void Release(ControllerContext context, object controller)
@@ -72,6 +78,14 @@ namespace Docman.API.Infrastructure
 
             return new DocumentFilesController(readEvents, saveAndPublish, new DocumentRepository.GetFile(getFile),
                 new DocumentRepository.GetFiles(getFiles));
+        }
+
+        private UsersController NewUsersController()
+        {
+            var createFirebaseUser = par(FirebaseHelper.CreateUser, _configuration["FirebaseWebApiKey"]);
+            var saveAndPublish = ConstructSaveAndPublishEventFunc();
+
+            return new UsersController(createFirebaseUser, saveAndPublish);
         }
 
         private Func<Event, Task> ConstructSaveAndPublishEventFunc()

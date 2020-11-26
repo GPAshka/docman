@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="FirebaseAuthentication.net" Version="3.4.0" />
       <PackageReference Include="FluentMigrator" Version="3.2.9" />
       <PackageReference Include="FluentMigrator.Runner" Version="3.2.9" />
       <PackageReference Include="FluentMigrator.Runner.Postgres" Version="3.2.9" />

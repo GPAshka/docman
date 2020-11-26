@@ -35,7 +35,7 @@ namespace Docman.API
 
             services.AddMediatR(typeof(Startup));
             services.AddSingleton<IControllerActivator>(serviceProvider =>
-                new DocumentsControllerActivator(Configuration, serviceProvider));
+                new DocmanControllerActivator(Configuration, serviceProvider));
             
             var postgresConnectionString = Configuration["PostgreSqlConnectionString"];
             services.AddSingleton(new DocumentRepository.AddDocument(par(DocumentPostgresRepository.AddDocument,
