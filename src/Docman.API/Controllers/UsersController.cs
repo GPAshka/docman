@@ -17,15 +17,18 @@ namespace Docman.API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly Func<string, string, Task<Validation<Error, string>>> _createFirebaseUser;
+        private readonly Func<string, string, Task<Validation<Error, string>>> _signInUser;
         private readonly Func<Event, Task<Validation<Error, Event>>> _saveAndPublishEventAsync;
 
         public UsersController(Func<string, string, Task<Validation<Error, string>>> createFirebaseUser,
-            Func<Event, Task<Validation<Error, Event>>> saveAndPublishEventAsync)
+            Func<Event, Task<Validation<Error, Event>>> saveAndPublishEventAsync,
+            Func<string, string, Task<Validation<Error, string>>> signInUser)
         {
             _createFirebaseUser = createFirebaseUser;
             _saveAndPublishEventAsync = saveAndPublishEventAsync;
+            _signInUser = signInUser;
         }
-        
+
         [AllowAnonymous]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -40,6 +43,17 @@ namespace Docman.API.Controllers
             return await outcome.Map(val => val.Match<IActionResult>(
                 Succ: evt => Created($"users/{evt.EntityId}", null),
                 Fail: errors => BadRequest(new { Errors = errors.Join() })));
+        }
+
+        [HttpPost("login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SignIn([FromBody] CreateUserCommand command)
+        {
+            return await _signInUser(command.Email, command.Password)
+                .Map(val => val.Match<IActionResult>(
+                    Succ: Ok,
+                    Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
     }
 }

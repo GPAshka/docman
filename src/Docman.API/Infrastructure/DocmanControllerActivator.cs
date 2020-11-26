@@ -84,9 +84,10 @@ namespace Docman.API.Infrastructure
         private UsersController NewUsersController()
         {
             var createFirebaseUser = par(FirebaseHelper.CreateUser, _configuration["FirebaseWebApiKey"]);
+            var signInUser = par(FirebaseHelper.SignInUser, _configuration["FirebaseWebApiKey"]);
             var saveAndPublish = ConstructSaveAndPublishEventFunc();
 
-            return new UsersController(createFirebaseUser, saveAndPublish);
+            return new UsersController(createFirebaseUser, saveAndPublish, signInUser);
         }
 
         private Func<Event, Task<Validation<Error, Event>>> ConstructSaveAndPublishEventFunc()
