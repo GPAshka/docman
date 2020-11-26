@@ -4,12 +4,14 @@ using Docman.Infrastructure.PostgreSql.Migrations;
 using Docman.Infrastructure.Repositories;
 using FluentMigrator.Runner;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Converters;
 using static LanguageExt.Prelude;
 
@@ -31,6 +33,22 @@ namespace Docman.API
                 .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.Converters.Add(new StringEnumConverter());
+                });
+
+            services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.IncludeErrorDetails = true;
+                    options.Authority = "https://securetoken.google.com/docman-a427d";
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = "https://securetoken.google.com/docman-a427d",
+                        ValidateAudience = true,
+                        ValidAudience = "docman-a427d",
+                        ValidateLifetime = true
+                    };
                 });
 
             services.AddMediatR(typeof(Startup));
@@ -69,6 +87,8 @@ namespace Docman.API
 
             app.UseRouting();
 
+            app.UseAuthentication();
+            
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });

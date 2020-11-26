@@ -45,6 +45,7 @@ namespace Docman.API.Controllers
                 Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
