@@ -1,6 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Docman.API.Application.Dto.Events;
+using Docman.API.Application.Dto.UserEvents;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using MediatR;

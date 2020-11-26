@@ -1,6 +1,7 @@
 using System;
 using Docman.API.Application.Dto;
-using Docman.API.Application.Dto.Events;
+using Docman.API.Application.Dto.DocumentEvents.Events;
+using Docman.API.Application.Dto.UserEvents;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.DocumentAggregate.Events;

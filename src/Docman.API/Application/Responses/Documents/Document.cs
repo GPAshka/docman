@@ -1,7 +1,7 @@
 using System;
 using LanguageExt;
 
-namespace Docman.API.Application.Responses
+namespace Docman.API.Application.Responses.Documents
 {
     public class Document : Record<Document>
     {

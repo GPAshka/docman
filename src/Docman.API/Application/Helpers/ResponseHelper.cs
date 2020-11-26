@@ -1,17 +1,19 @@
 using System.Collections.Generic;
 using System.Linq;
-using Docman.API.Application.Responses;
+using Docman.API.Application.Responses.Documents;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.DocumentAggregate.Events;
 using Docman.Infrastructure.Dto;
+using Document = Docman.API.Application.Responses.Documents.Document;
+using File = Docman.API.Application.Responses.Documents.File;
 
 namespace Docman.API.Application.Helpers
 {
     public static class ResponseHelper
     {
-        public static Responses.Document GenerateDocumentResponse(
-            DocumentDatabaseDto documentDatabaseDto) => new Responses.Document(
+        public static Document GenerateDocumentResponse(
+            DocumentDatabaseDto documentDatabaseDto) => new Document(
             documentDatabaseDto.Id,
             documentDatabaseDto.UserId,
             documentDatabaseDto.Number,
@@ -20,8 +22,8 @@ namespace Docman.API.Application.Helpers
             documentDatabaseDto.ApprovalComment,
             documentDatabaseDto.RejectReason);
 
-        public static Responses.File GenerateFileResponse(FileDatabaseDto fileDatabaseDto) =>
-            new Responses.File(
+        public static File GenerateFileResponse(FileDatabaseDto fileDatabaseDto) =>
+            new File(
                 fileDatabaseDto.Id,
                 fileDatabaseDto.DocumentId,
                 fileDatabaseDto.Name,

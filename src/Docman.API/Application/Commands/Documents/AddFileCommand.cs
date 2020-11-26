@@ -1,4 +1,4 @@
-namespace Docman.API.Application.Commands
+namespace Docman.API.Application.Commands.Documents
 {
     public class AddFileCommand
     {

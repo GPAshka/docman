@@ -1,6 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Docman.API.Application.Dto.Events;
+using Docman.API.Application.Dto.DocumentEvents.Events;
 using Docman.Domain.DocumentAggregate;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
@@ -8,7 +8,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Unit = LanguageExt.Unit;
 
-namespace Docman.API.Application.EventHandlers
+namespace Docman.API.Application.EventHandlers.Documents
 {
     public class UpdateDocumentInDatabaseWhenApprovedEventHandler : INotificationHandler<DocumentApprovedEventDto>
     {

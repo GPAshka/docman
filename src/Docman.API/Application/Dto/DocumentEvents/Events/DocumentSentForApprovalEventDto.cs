@@ -1,7 +1,7 @@
 using System;
 using MediatR;
 
-namespace Docman.API.Application.Dto.Events
+namespace Docman.API.Application.Dto.DocumentEvents.Events
 {
     public record DocumentSentForApprovalEventDto : EventDto, INotification
     {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Docman.API.Application.Commands;
+using Docman.API.Application.Commands.Documents;
 using Docman.API.Application.Helpers;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;

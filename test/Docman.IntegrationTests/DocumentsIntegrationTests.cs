@@ -3,11 +3,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Docman.API;
 using Docman.API.Application.Commands;
+using Docman.API.Application.Commands.Documents;
 using Docman.Domain.DocumentAggregate;
 using Docman.IntegrationTests.Extensions;
 using Docman.IntegrationTests.Infrastructure;
 using Xunit;
-using Document = Docman.API.Application.Responses.Document;
+using Document = Docman.API.Application.Responses.Documents.Document;
 
 namespace Docman.IntegrationTests
 {

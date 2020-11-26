@@ -1,7 +1,7 @@
 using System;
 using MediatR;
 
-namespace Docman.API.Application.Dto.Events
+namespace Docman.API.Application.Dto.UserEvents
 {
     public record UserCreatedEventDto : EventDto, INotification
     {

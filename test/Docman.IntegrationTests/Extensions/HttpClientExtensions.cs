@@ -5,9 +5,10 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Docman.API.Application.Commands;
+using Docman.API.Application.Commands.Documents;
 using Newtonsoft.Json;
 using Xunit;
-using File = Docman.API.Application.Responses.File;
+using File = Docman.API.Application.Responses.Documents.File;
 
 namespace Docman.IntegrationTests.Extensions
 {

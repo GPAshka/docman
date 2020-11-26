@@ -1,5 +1,6 @@
 using System;
 using Docman.API.Application.Commands;
+using Docman.API.Application.Commands.Documents;
 using Docman.API.Application.Commands.Users;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
