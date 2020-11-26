@@ -1,4 +1,4 @@
-namespace Docman.Domain.DocumentAggregate.Errors
+namespace Docman.Domain.Errors
 {
     public class EmptyValueError : Error
     {

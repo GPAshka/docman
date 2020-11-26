@@ -7,7 +7,7 @@ using Docman.API.Application.Extensions;
 using Docman.API.Application.Helpers;
 using Docman.API.Application.Responses.Documents;
 using Docman.Domain;
-using Docman.Domain.DocumentAggregate.Errors;
+using Docman.Domain.Errors;
 using Docman.Domain.Extensions;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;

@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
-using Docman.Domain.DocumentAggregate.Errors;
+using Docman.Domain.Errors;
 using LanguageExt;
 using Xunit;
 

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
-using Docman.Domain.DocumentAggregate.Errors;
 using Docman.Domain.DocumentAggregate.Events;
+using Docman.Domain.Errors;
 using LanguageExt;
 using Document = Docman.Domain.DocumentAggregate.Document;
 

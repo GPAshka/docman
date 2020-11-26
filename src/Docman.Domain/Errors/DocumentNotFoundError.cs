@@ -1,6 +1,6 @@
 using System;
 
-namespace Docman.Domain.DocumentAggregate.Errors
+namespace Docman.Domain.Errors
 {
     public class DocumentNotFoundError : Error
     {

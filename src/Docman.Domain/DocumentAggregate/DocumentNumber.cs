@@ -1,5 +1,5 @@
 using System.Runtime.Serialization;
-using Docman.Domain.DocumentAggregate.Errors;
+using Docman.Domain.Errors;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate

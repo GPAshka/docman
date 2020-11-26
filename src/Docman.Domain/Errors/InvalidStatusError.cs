@@ -1,4 +1,6 @@
-namespace Docman.Domain.DocumentAggregate.Errors
+using Docman.Domain.DocumentAggregate;
+
+namespace Docman.Domain.Errors
 {
     public class InvalidStatusError : Error
     {

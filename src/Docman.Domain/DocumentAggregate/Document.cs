@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Docman.Domain.DocumentAggregate.Errors;
+using Docman.Domain.Errors;
 using LanguageExt;
 
 namespace Docman.Domain.DocumentAggregate
