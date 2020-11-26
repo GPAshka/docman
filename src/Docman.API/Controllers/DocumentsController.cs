@@ -10,6 +10,7 @@ using Docman.Domain.DocumentAggregate.Errors;
 using Docman.Domain.Extensions;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static LanguageExt.Prelude;
@@ -17,6 +18,7 @@ using Document = Docman.Domain.DocumentAggregate.Document;
 
 namespace Docman.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class DocumentsController : ControllerBase

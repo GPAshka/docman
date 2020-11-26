@@ -8,11 +8,13 @@ using Docman.Domain.DocumentAggregate;
 using Docman.Domain.Extensions;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Docman.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("documents/{documentId:guid}/files")]
     public class DocumentFilesController : ControllerBase
