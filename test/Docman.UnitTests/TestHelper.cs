@@ -8,9 +8,9 @@ namespace Docman.UnitTests
 {
     public static class TestHelper
     {
-        public static Task<Validation<Error, Event>> SaveAndPublish(Event evt)
+        public static Task<Validation<Error, Unit>> SaveAndPublish(Event evt)
         {
-            return Task.FromResult(Validation<Error, Event>.Success(evt));
+            return Task.FromResult(Validation<Error, Unit>.Success(Unit.Default));
         }
 
         public static Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ValidReadEventsFunc(

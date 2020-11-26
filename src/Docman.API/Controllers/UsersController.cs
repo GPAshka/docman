@@ -18,10 +18,10 @@ namespace Docman.API.Controllers
     {
         private readonly Func<string, string, Task<Validation<Error, string>>> _createFirebaseUser;
         private readonly Func<string, string, Task<Validation<Error, string>>> _signInUser;
-        private readonly Func<Event, Task<Validation<Error, Event>>> _saveAndPublishEventAsync;
+        private readonly Func<Event, Task<Validation<Error, Unit>>> _saveAndPublishEventAsync;
 
         public UsersController(Func<string, string, Task<Validation<Error, string>>> createFirebaseUser,
-            Func<Event, Task<Validation<Error, Event>>> saveAndPublishEventAsync,
+            Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync,
             Func<string, string, Task<Validation<Error, string>>> signInUser)
         {
             _createFirebaseUser = createFirebaseUser;

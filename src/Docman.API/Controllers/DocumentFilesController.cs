@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Docman.API.Application.Commands;
 using Docman.API.Application.Commands.Documents;
 using Docman.API.Application.Helpers;
 using Docman.Domain;
@@ -21,12 +20,12 @@ namespace Docman.API.Controllers
     public class DocumentFilesController : ControllerBase
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> _readEvents;
-        private readonly Func<Event, Task<Validation<Error, Event>>> _saveAndPublishEventAsync;
+        private readonly Func<Event, Task<Validation<Error, Unit>>> _saveAndPublishEventAsync;
         private readonly DocumentRepository.GetFile _getFile;
         private readonly DocumentRepository.GetFiles _getFiles;
 
         public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Func<Event, Task<Validation<Error, Event>>> saveAndPublishEventAsync, DocumentRepository.GetFile getFile,
+            Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync, DocumentRepository.GetFile getFile,
             DocumentRepository.GetFiles getFiles)
         {
             _readEvents = readEvents;

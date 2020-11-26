@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Docman.API.Application.Commands;
 using Docman.API.Application.Commands.Documents;
 using Docman.API.Application.Extensions;
 using Docman.API.Application.Helpers;
@@ -25,7 +24,7 @@ namespace Docman.API.Controllers
     public class DocumentsController : ControllerBase
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> _readEvents;
-        private readonly Func<Event, Task<Validation<Error, Event>>> _saveAndPublishEventAsync;
+        private readonly Func<Event, Task<Validation<Error, Unit>>> _saveAndPublishEventAsync;
         private readonly DocumentRepository.DocumentExistsByNumber _documentExistsByNumber;
         private readonly DocumentRepository.GetDocumentById _getDocumentById;
 
@@ -51,7 +50,7 @@ namespace Docman.API.Controllers
             };
 
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Func<Event, Task<Validation<Error, Event>>> saveAndPublishEventAsync, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
+            Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
             DocumentRepository.GetDocumentById getDocumentById)
         {
             _saveAndPublishEventAsync = saveAndPublishEventAsync;

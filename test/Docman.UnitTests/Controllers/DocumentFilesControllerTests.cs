@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Docman.API.Application.Commands;
 using Docman.API.Application.Commands.Documents;
 using Docman.API.Application.Dto.DocumentEvents.Events;
 using Docman.API.Application.Extensions;
@@ -58,7 +57,7 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var fileId = Guid.NewGuid();
             var getFileById =
-                new DocumentRepository.GetFile((documentId, id) => Task.FromResult(Option<FileDatabaseDto>.None));
+                new DocumentRepository.GetFile((_, _) => Task.FromResult(Option<FileDatabaseDto>.None));
             _documentFilesController =
                 new DocumentFilesController(TestHelper.ValidReadEventsFunc(), TestHelper.SaveAndPublish, getFileById, GetFiles);
 
@@ -94,7 +93,7 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var getFiles =
-                new DocumentRepository.GetFiles(documentId => Task.FromResult(Enumerable.Empty<FileDatabaseDto>()));
+                new DocumentRepository.GetFiles(_ => Task.FromResult(Enumerable.Empty<FileDatabaseDto>()));
             _documentFilesController =
                 new DocumentFilesController(TestHelper.ValidReadEventsFunc(), TestHelper.SaveAndPublish, GetFile, getFiles);
 

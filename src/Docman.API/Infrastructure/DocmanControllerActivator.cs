@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using static LanguageExt.Prelude;
+using Unit = LanguageExt.Unit;
 
 namespace Docman.API.Infrastructure
 {
@@ -90,7 +91,7 @@ namespace Docman.API.Infrastructure
             return new UsersController(createFirebaseUser, saveAndPublish, signInUser);
         }
 
-        private Func<Event, Task<Validation<Error, Event>>> ConstructSaveAndPublishEventFunc()
+        private Func<Event, Task<Validation<Error, Unit>>> ConstructSaveAndPublishEventFunc()
         {
             var mediator = _serviceProvider.GetRequiredService<IMediator>();
             

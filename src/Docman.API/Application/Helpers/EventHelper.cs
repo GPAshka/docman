@@ -9,14 +9,14 @@ namespace Docman.API.Application.Helpers
 {
     public static class EventHelper
     {
-        public static Func<Func<EventDto, Task>, Func<EventDto, Task>, Event, Task<Validation<Error, Event>>>
+        public static Func<Func<EventDto, Task>, Func<EventDto, Task>, Event, Task<Validation<Error, Unit>>>
             SaveAndPublish =>
             async (saveEvent, publishEvent, @event) =>
             {
                 var eventDto = @event.ToDto();
                 await saveEvent(eventDto);
                 await publishEvent(eventDto);
-                return Validation<Error, Event>.Success(@event);
+                return Validation<Error, Unit>.Success(Unit.Default);
             };
     }
 }
