@@ -68,6 +68,9 @@ namespace Docman.API
                 postgresConnectionString)));
             services.AddSingleton(new DocumentRepository.RejectDocument(par(DocumentPostgresRepository.RejectDocument,
                 postgresConnectionString)));
+
+            services.AddSingleton(
+                new UserRepository.AddUser(par(UserPostgresRepository.Adduser, postgresConnectionString)));
             
             services.AddFluentMigratorCore().ConfigureRunner(rb => rb
                 .AddPostgres()
