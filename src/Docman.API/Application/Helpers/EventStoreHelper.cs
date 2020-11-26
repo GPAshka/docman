@@ -30,6 +30,7 @@ namespace Docman.API.Application.Helpers
                         DocumentSentForApprovalEventDto sentForApprovalEventDto => sentForApprovalEventDto.ToEvent(),
                         DocumentRejectedEventDto rejectedEventDto => rejectedEventDto.ToEvent(),
                         DocumentUpdatedEventDto updatedEventDto => updatedEventDto.ToEvent(),
+                        UserCreatedEventDto userCreatedEventDto => userCreatedEventDto.ToEvent(),
                         _ => new Error($"Unknown event DTO type: {dto.GetType().Name}")
                     });
                 return events.Traverse(x => x);

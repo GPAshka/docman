@@ -4,7 +4,10 @@ using Docman.API.Application.Dto.Events;
 using Docman.Domain;
 using Docman.Domain.DocumentAggregate;
 using Docman.Domain.DocumentAggregate.Events;
+using Docman.Domain.UserAggregate;
+using Docman.Domain.UserAggregate.Events;
 using LanguageExt;
+using UserId = Docman.Domain.DocumentAggregate.UserId;
 
 namespace Docman.API.Application.Extensions
 {
@@ -19,44 +22,33 @@ namespace Docman.API.Application.Extensions
                 DocumentSentForApprovalEvent sentForApprovalEvent => sentForApprovalEvent.ToDto(),
                 DocumentRejectedEvent documentRejectedEvent => documentRejectedEvent.ToDto(),
                 DocumentUpdatedEvent documentUpdatedEvent => documentUpdatedEvent.ToDto(),
+                UserCreatedEvent userCreatedEvent => userCreatedEvent.ToDto(),
                 _ => throw new ArgumentOutOfRangeException(nameof(@event))    //TODO
             };
 
         private static DocumentCreatedEventDto ToDto(this DocumentCreatedEvent @event) =>
-            new DocumentCreatedEventDto(
-                @event.EntityId,
-                @event.TimeStamp, @event.UserId.Value, @event.Number.Value, @event.Description.Match(Some: d => d.Value, None: string.Empty));
+            new(@event.EntityId, @event.TimeStamp, @event.UserId.Value, @event.Number.Value,
+                @event.Description.Match(Some: d => d.Value, None: string.Empty));
 
         private static DocumentApprovedEventDto ToDto(this DocumentApprovedEvent @event) =>
-            new DocumentApprovedEventDto(
-                @event.EntityId,
-                @event.TimeStamp, @event.Comment.Value);
+            new(@event.EntityId, @event.TimeStamp, @event.Comment.Value);
 
         private static FileAddedEventDto ToDto(this FileAddedEvent @event) =>
-            new FileAddedEventDto(
-                @event.EntityId,
-                @event.TimeStamp,
-                @event.FileId.Value,
-                @event.Name.Value,
+            new(@event.EntityId, @event.TimeStamp, @event.FileId.Value, @event.Name.Value,
                 @event.Description.Match(d => d.Value, string.Empty));
 
         private static DocumentSentForApprovalEventDto ToDto(this DocumentSentForApprovalEvent @event) =>
-            new DocumentSentForApprovalEventDto(
-                @event.EntityId,
-                @event.TimeStamp);
+            new(@event.EntityId, @event.TimeStamp);
 
         private static DocumentRejectedEventDto ToDto(this DocumentRejectedEvent @event) =>
-            new DocumentRejectedEventDto(
-                @event.EntityId,
-                @event.TimeStamp,
-                @event.Reason.Value);
+            new(@event.EntityId, @event.TimeStamp, @event.Reason.Value);
 
         private static DocumentUpdatedEventDto ToDto(this DocumentUpdatedEvent @event) =>
-            new DocumentUpdatedEventDto(
-                @event.EntityId,
-                @event.TimeStamp,
-                @event.Number.Value,
+            new(@event.EntityId, @event.TimeStamp, @event.Number.Value,
                 @event.Description.Match(d => d.Value, string.Empty));
+
+        private static UserCreatedEventDto ToDto(this UserCreatedEvent @event) => 
+            new(@event.EntityId, @event.TimeStamp, @event.UserEmail.Value, @event.FirebaseId.Value);
 
         public static Validation<Error, Event> ToEvent(this DocumentCreatedEventDto dto) =>
             DocumentNumber.Create(dto.Number)
@@ -86,5 +78,10 @@ namespace Docman.API.Application.Extensions
             DocumentNumber.Create(dto.Number)
                 .Bind(num => DocumentDescription.Create(dto.Description)
                     .Map(desc => (Event) new DocumentUpdatedEvent(new DocumentId(dto.Id), num, desc, dto.TimeStamp)));
+
+        public static Validation<Error, Event> ToEvent(this UserCreatedEventDto dto) =>
+            Email.Create(dto.Email)
+                .Map(email => (Event) new UserCreatedEvent(new Docman.Domain.UserAggregate.UserId(dto.Id),
+                    dto.TimeStamp, email, new FirebaseId(dto.FirebaseId)));
     }
 }
