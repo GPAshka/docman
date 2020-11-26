@@ -18,12 +18,12 @@ namespace Docman.API.Controllers
     public class DocumentFilesController : ControllerBase
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> _readEvents;
-        private readonly Func<Event, Task> _saveAndPublishEventAsync;
+        private readonly Func<Event, Task<Validation<Error, Event>>> _saveAndPublishEventAsync;
         private readonly DocumentRepository.GetFile _getFile;
         private readonly DocumentRepository.GetFiles _getFiles;
 
         public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Func<Event, Task> saveAndPublishEventAsync, DocumentRepository.GetFile getFile,
+            Func<Event, Task<Validation<Error, Event>>> saveAndPublishEventAsync, DocumentRepository.GetFile getFile,
             DocumentRepository.GetFiles getFiles)
         {
             _readEvents = readEvents;
@@ -34,12 +34,6 @@ namespace Docman.API.Controllers
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
             id => DocumentHelper.GetDocumentFromEvents(_readEvents, id);
-        
-        private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEventWithValidation => async evt =>
-        {
-            await _saveAndPublishEventAsync(evt);
-            return Validation<Error, Event>.Success(evt);
-        };
         
         [HttpGet]
         [Route("{fileId:guid}")]
@@ -72,7 +66,7 @@ namespace Docman.API.Controllers
             var outcome = 
                 from doc in GetDocumentFromEvents(documentId)
                 from result in doc.AddFile(Guid.NewGuid(), command.FileName, command.FileDescription).AsTask()
-                from _ in SaveAndPublishEventWithValidation(result.Event)
+                from _ in _saveAndPublishEventAsync(result.Event)
                 select result.Event;
 
             return await outcome.Map(val => val.Match<IActionResult>(

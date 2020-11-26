@@ -5,6 +5,7 @@ using Docman.API.Controllers;
 using Docman.Domain;
 using Docman.Infrastructure.PostgreSql;
 using Docman.Infrastructure.Repositories;
+using LanguageExt;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -88,7 +89,7 @@ namespace Docman.API.Infrastructure
             return new UsersController(createFirebaseUser, saveAndPublish);
         }
 
-        private Func<Event, Task> ConstructSaveAndPublishEventFunc()
+        private Func<Event, Task<Validation<Error, Event>>> ConstructSaveAndPublishEventFunc()
         {
             var mediator = _serviceProvider.GetRequiredService<IMediator>();
             

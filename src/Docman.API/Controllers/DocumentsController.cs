@@ -22,7 +22,7 @@ namespace Docman.API.Controllers
     public class DocumentsController : ControllerBase
     {
         private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> _readEvents;
-        private readonly Func<Event, Task> _saveAndPublishEventAsync;
+        private readonly Func<Event, Task<Validation<Error, Event>>> _saveAndPublishEventAsync;
         private readonly DocumentRepository.DocumentExistsByNumber _documentExistsByNumber;
         private readonly DocumentRepository.GetDocumentById _getDocumentById;
 
@@ -47,14 +47,8 @@ namespace Docman.API.Controllers
                 return Validation<Error, UpdateDocumentCommand>.Success(updateCommand);
             };
 
-        private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEventWithValidation => async evt =>
-        {
-            await _saveAndPublishEventAsync(evt);
-            return Validation<Error, Event>.Success(evt);
-        };
-
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Func<Event, Task> saveAndPublishEventAsync, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
+            Func<Event, Task<Validation<Error, Event>>> saveAndPublishEventAsync, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
             DocumentRepository.GetDocumentById getDocumentById)
         {
             _saveAndPublishEventAsync = saveAndPublishEventAsync;
@@ -101,7 +95,7 @@ namespace Docman.API.Controllers
             var outcome =
                 from cmd in ValidateCreateCommand(command)
                 from evt in cmd.ToEvent(Guid.NewGuid()).AsTask()
-                from _ in SaveAndPublishEventWithValidation(evt)
+                from _ in _saveAndPublishEventAsync(evt)
                 select evt;
 
             return await outcome.Map(val => val.Match<IActionResult>(
@@ -125,11 +119,11 @@ namespace Docman.API.Controllers
             var outcome =
                 from result in ValidateCommandAndGetDocument(command)
                 from docEvent in result.Document.Update(result.Command?.Number, result.Command?.Description).AsTask()
-                from _ in SaveAndPublishEventWithValidation(docEvent.Event)
+                from _ in _saveAndPublishEventAsync(docEvent.Event)
                 select docEvent.Document;
 
             return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: res => NoContent(),
+                Succ: _ => NoContent(),
                 Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
         
@@ -142,11 +136,11 @@ namespace Docman.API.Controllers
             var outcome =
                 from doc in GetDocumentFromEvents(id)
                 from result in doc.Approve(command.Comment).AsTask()
-                from _ in SaveAndPublishEventWithValidation(result.Event)
+                from _ in _saveAndPublishEventAsync(result.Event)
                 select result.Document;
 
             return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: res => NoContent(),
+                Succ: _ => NoContent(),
                 Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
         
@@ -159,11 +153,11 @@ namespace Docman.API.Controllers
             var outcome = 
                 from doc in GetDocumentFromEvents(id)
                 from result in doc.Reject(command.Reason).AsTask()
-                from _ in SaveAndPublishEventWithValidation(result.Event)
+                from _ in _saveAndPublishEventAsync(result.Event)
                 select result.Document;
             
             return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: res => NoContent(),
+                Succ: _ => NoContent(),
                 Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
 
@@ -176,11 +170,11 @@ namespace Docman.API.Controllers
             var outcome = 
                 from doc in GetDocumentFromEvents(id)
                 from result in DocumentHelper.SendForApproval(doc).AsTask()
-                from _ in SaveAndPublishEventWithValidation(result.Event)
+                from _ in _saveAndPublishEventAsync(result.Event)
                 select result.Document;
 
             return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: res => NoContent(),
+                Succ: _ => NoContent(),
                 Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
     }

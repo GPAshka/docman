@@ -17,21 +17,15 @@ namespace Docman.API.Controllers
     public class UsersController : ControllerBase
     {
         private readonly Func<string, string, Task<Validation<Error, string>>> _createFirebaseUser;
-        private readonly Func<Event, Task> _saveAndPublishEventAsync;
+        private readonly Func<Event, Task<Validation<Error, Event>>> _saveAndPublishEventAsync;
 
         public UsersController(Func<string, string, Task<Validation<Error, string>>> createFirebaseUser,
-            Func<Event, Task> saveAndPublishEventAsync)
+            Func<Event, Task<Validation<Error, Event>>> saveAndPublishEventAsync)
         {
             _createFirebaseUser = createFirebaseUser;
             _saveAndPublishEventAsync = saveAndPublishEventAsync;
         }
         
-        private Func<Event, Task<Validation<Error, Event>>> SaveAndPublishEventWithValidation => async evt =>
-        {
-            await _saveAndPublishEventAsync(evt);
-            return Validation<Error, Event>.Success(evt);
-        };
-
         [AllowAnonymous]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -40,7 +34,7 @@ namespace Docman.API.Controllers
         {
             var outcome = from firebaseId in _createFirebaseUser(command.Email, command.Password)
                 from evt in command.ToEvent(Guid.NewGuid(), firebaseId).AsTask()
-                from _ in SaveAndPublishEventWithValidation(evt)
+                from _ in _saveAndPublishEventAsync(evt)
                 select evt;
 
             return await outcome.Map(val => val.Match<IActionResult>(
