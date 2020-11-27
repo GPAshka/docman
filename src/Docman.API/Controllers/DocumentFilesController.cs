@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Docman.API.Application.Commands.Documents;
+using Docman.API.Application.Extensions;
 using Docman.API.Application.Helpers;
 using Docman.Domain;
-using Docman.Domain.DocumentAggregate;
-using Docman.Domain.Extensions;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using Microsoft.AspNetCore.Authorization;
@@ -17,26 +16,23 @@ namespace Docman.API.Controllers
     [Authorize]
     [ApiController]
     [Route("documents/{documentId:guid}/files")]
-    public class DocumentFilesController : ControllerBase
+    public class DocumentFilesController : DocumentsBaseController
     {
-        private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> _readEvents;
-        private readonly Func<Event, Task<Validation<Error, Unit>>> _saveAndPublishEventAsync;
         private readonly DocumentRepository.GetFile _getFile;
         private readonly DocumentRepository.GetFiles _getFiles;
 
-        public DocumentFilesController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync, DocumentRepository.GetFile getFile,
-            DocumentRepository.GetFiles getFiles)
+        public DocumentFilesController(
+            Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
+            Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync,
+            DocumentRepository.GetFile getFile,
+            DocumentRepository.GetFiles getFiles,
+            Func<HttpContext, Task<Option<Guid>>> getCurrentUserId)
+            : base(readEvents, saveAndPublishEventAsync, getCurrentUserId)
         {
-            _readEvents = readEvents;
-            _saveAndPublishEventAsync = saveAndPublishEventAsync;
             _getFile = getFile;
             _getFiles = getFiles;
         }
 
-        private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
-            id => DocumentHelper.GetDocumentFromEvents(_readEvents, id);
-        
         [HttpGet]
         [Route("{fileId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -63,18 +59,19 @@ namespace Docman.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> AddFile(Guid documentId, [FromBody] AddFileCommand command)
         {
             var outcome = 
                 from doc in GetDocumentFromEvents(documentId)
                 from result in doc.AddFile(Guid.NewGuid(), command.FileName, command.FileDescription).AsTask()
-                from _ in _saveAndPublishEventAsync(result.Event)
+                from u in ValidateDocumentUser(result.Document, HttpContext)
+                from _ in SaveAndPublishEventAsync(result.Event)
                 select result.Event;
 
-            return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: evt =>
-                    Created($"documents/{documentId}/files/{evt.FileId}", null),
-                Fail: errors => BadRequest(new { Errors = errors.Join() })));
+            return await outcome.Map(val =>
+                val.ToActionResult(evt => Created($"documents/{documentId}/files/{evt.FileId}", null)));
         }
     }
 }

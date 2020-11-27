@@ -81,9 +81,13 @@ namespace Docman.API.Infrastructure
 
             var getFile = par(DocumentPostgresRepository.GetFileByIdAsync, _postgresConnectionString);
             var getFiles = par(DocumentPostgresRepository.GetFilesAsync, _postgresConnectionString);
+            
+            var getCurrentUserId = par(UserHelper.GetCurrentUserId,
+                new UserRepository.GetUserByFirebaseId(par(UserPostgresRepository.GetUserByFirebaseId,
+                    _postgresConnectionString)));
 
             return new DocumentFilesController(readEvents, saveAndPublish, new DocumentRepository.GetFile(getFile),
-                new DocumentRepository.GetFiles(getFiles));
+                new DocumentRepository.GetFiles(getFiles), getCurrentUserId);
         }
 
         private UsersController NewUsersController()

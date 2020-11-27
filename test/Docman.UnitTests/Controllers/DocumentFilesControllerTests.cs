@@ -36,8 +36,8 @@ namespace Docman.UnitTests.Controllers
         {
             //Arrange
             var fileId = Guid.NewGuid();
-            _documentFilesController =
-                new DocumentFilesController(TestHelper.ValidReadEventsFunc(), TestHelper.SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController = new DocumentFilesController(TestHelper.ValidReadEventsFunc(),
+                TestHelper.SaveAndPublish, GetFile, GetFiles, TestHelper.GetCurrentUserId());
 
             // Act
             var actionResult = await _documentFilesController.GetFileAsync(Guid.Empty, fileId);
@@ -58,8 +58,8 @@ namespace Docman.UnitTests.Controllers
             var fileId = Guid.NewGuid();
             var getFileById =
                 new DocumentRepository.GetFile((_, _) => Task.FromResult(Option<FileDatabaseDto>.None));
-            _documentFilesController =
-                new DocumentFilesController(TestHelper.ValidReadEventsFunc(), TestHelper.SaveAndPublish, getFileById, GetFiles);
+            _documentFilesController = new DocumentFilesController(TestHelper.ValidReadEventsFunc(),
+                TestHelper.SaveAndPublish, getFileById, GetFiles, TestHelper.GetCurrentUserId());
 
             // Act
             var actionResult = await _documentFilesController.GetFileAsync(Guid.Empty, fileId);
@@ -73,8 +73,8 @@ namespace Docman.UnitTests.Controllers
         public async Task TestGetFilesOkResult()
         {
             //Arrange
-            _documentFilesController =
-                new DocumentFilesController(TestHelper.ValidReadEventsFunc(), TestHelper.SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController = new DocumentFilesController(TestHelper.ValidReadEventsFunc(),
+                TestHelper.SaveAndPublish, GetFile, GetFiles, TestHelper.GetCurrentUserId());
 
             // Act
             var actionResult = await _documentFilesController.GetFilesAsync(Guid.Empty);
@@ -94,8 +94,8 @@ namespace Docman.UnitTests.Controllers
             //Arrange
             var getFiles =
                 new DocumentRepository.GetFiles(_ => Task.FromResult(Enumerable.Empty<FileDatabaseDto>()));
-            _documentFilesController =
-                new DocumentFilesController(TestHelper.ValidReadEventsFunc(), TestHelper.SaveAndPublish, GetFile, getFiles);
+            _documentFilesController = new DocumentFilesController(TestHelper.ValidReadEventsFunc(),
+                TestHelper.SaveAndPublish, GetFile, getFiles, TestHelper.GetCurrentUserId());
 
             // Act
             var actionResult = await _documentFilesController.GetFilesAsync(Guid.Empty);
@@ -119,8 +119,8 @@ namespace Docman.UnitTests.Controllers
                 new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
-            _documentFilesController =
-                new DocumentFilesController(readEventsFunc, TestHelper.SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController = new DocumentFilesController(readEventsFunc, TestHelper.SaveAndPublish, GetFile,
+                GetFiles, TestHelper.GetCurrentUserId());
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -140,7 +140,7 @@ namespace Docman.UnitTests.Controllers
             var command = new AddFileCommand("test", "description");
 
             _documentFilesController = new DocumentFilesController(TestHelper.ReadEventsFuncWithError(error),
-                TestHelper.SaveAndPublish, GetFile, GetFiles);
+                TestHelper.SaveAndPublish, GetFile, GetFiles, TestHelper.GetCurrentUserId());
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -161,8 +161,8 @@ namespace Docman.UnitTests.Controllers
                 new DocumentCreatedEventDto(Guid.Empty, DateTime.UtcNow, Guid.Empty, "1234", string.Empty);
             var readEventsFunc = TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent());
 
-            _documentFilesController =
-                new DocumentFilesController(readEventsFunc, TestHelper.SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController = new DocumentFilesController(readEventsFunc, TestHelper.SaveAndPublish, GetFile,
+                GetFiles, TestHelper.GetCurrentUserId());
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);
@@ -186,8 +186,8 @@ namespace Docman.UnitTests.Controllers
             var readEventsFunc =
                 TestHelper.ValidReadEventsFunc(documentCreatedDto.ToEvent(), fileAddedDto.ToEvent());
 
-            _documentFilesController =
-                new DocumentFilesController(readEventsFunc, TestHelper.SaveAndPublish, GetFile, GetFiles);
+            _documentFilesController = new DocumentFilesController(readEventsFunc, TestHelper.SaveAndPublish, GetFile,
+                GetFiles, TestHelper.GetCurrentUserId());
             
             //Act
             var result = await _documentFilesController.AddFile(documentId, command);

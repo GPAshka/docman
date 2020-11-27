@@ -21,16 +21,10 @@ namespace Docman.API.Controllers
     [Authorize]
     [ApiController]
     [Route("[controller]")]
-    public class DocumentsController : ControllerBase
+    public class DocumentsController : DocumentsBaseController
     {
-        private readonly Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> _readEvents;
-        private readonly Func<Event, Task<Validation<Error, Unit>>> _saveAndPublishEventAsync;
         private readonly DocumentRepository.DocumentExistsByNumber _documentExistsByNumber;
         private readonly DocumentRepository.GetDocumentById _getDocumentById;
-        private readonly Func<HttpContext, Task<Option<Guid>>> _getCurrentUserId;
-
-        private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
-            id => DocumentHelper.GetDocumentFromEvents(_readEvents, id);
 
         private Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> ValidateCreateCommand =>
             async createCommand =>
@@ -50,15 +44,16 @@ namespace Docman.API.Controllers
                 return updateCommand;
             };
 
-        public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
-            Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
-            DocumentRepository.GetDocumentById getDocumentById, Func<HttpContext, Task<Option<Guid>>> getCurrentUserId)
+        public DocumentsController(
+            Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
+            Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync,
+            DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
+            DocumentRepository.GetDocumentById getDocumentById,
+            Func<HttpContext, Task<Option<Guid>>> getCurrentUserId)
+            : base(readEvents, saveAndPublishEventAsync, getCurrentUserId)
         {
-            _saveAndPublishEventAsync = saveAndPublishEventAsync;
-            _readEvents = readEvents;
             _documentExistsByNumber = documentExistsByNumber;
             _getDocumentById = getDocumentById;
-            _getCurrentUserId = getCurrentUserId;
         }
 
         [HttpGet]
@@ -80,7 +75,7 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetDocumentHistory(Guid documentId)
         {
-            return await _readEvents(documentId)
+            return await ReadEvents(documentId)
                 .MapT(events => events.Match(
                     Empty: () => None,
                     More: otherEvents => Some(ResponseHelper.EventsToDocumentHistory(otherEvents))))
@@ -96,8 +91,9 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateDocument([FromBody] CreateDocumentCommand command)
         {
+            //More than three from clauses does not work, that's why two of them are combined to local helper function 
             Task<Validation<Error, (CreateDocumentCommand Command, Guid UserId)>> ValidateCommandAndGetUserId() =>
-                from id in _getCurrentUserId(HttpContext)
+                from id in GetCurrentUserId(HttpContext)
                     .Map(x => x.ToValidation<Error>("Current user Id was not found"))
                 from cmd in ValidateCreateCommand(command)
                 select (cmd, id);
@@ -105,7 +101,7 @@ namespace Docman.API.Controllers
             var outcome =
                 from result in ValidateCommandAndGetUserId()
                 from evt in result.Command.ToEvent(Guid.NewGuid(), result.UserId).AsTask()
-                from _ in _saveAndPublishEventAsync(evt)
+                from _ in SaveAndPublishEventAsync(evt)
                 select evt;
 
             return await outcome.Map(val => val.Match<IActionResult>(
@@ -116,76 +112,79 @@ namespace Docman.API.Controllers
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [Route("{id:guid}")]
         public async Task<IActionResult> UpdateDocument(Guid id, [FromBody] UpdateDocumentCommand command)
         {
             //More than three from clauses does not work, that's why two of them are combined to local helper function 
-            Task<Validation<Error, (UpdateDocumentCommand Command, Document Document)>> ValidateCommandAndGetDocument(
-                UpdateDocumentCommand cmd) =>
-                from c in ValidateUpdateCommand(cmd)
+            Task<Validation<Error, (UpdateDocumentCommand Command, Document Document)>> ValidateCommandAndGetDocument() =>
+                from cmd in ValidateUpdateCommand(command)
                 from doc in GetDocumentFromEvents(id)
-                select (c, doc);
+                select (cmd, doc);
 
             var outcome =
-                from result in ValidateCommandAndGetDocument(command)
-                from docEvent in result.Document.Update(result.Command?.Number, result.Command?.Description).AsTask()
-                from _ in _saveAndPublishEventAsync(docEvent.Event)
+                from result in ValidateCommandAndGetDocument()
+                from u in ValidateDocumentUser(result.Document, HttpContext)
+                from docEvent in result.Document.Update(result.Command.Number, result.Command.Description).AsTask()
+                from _ in SaveAndPublishEventAsync(docEvent.Event)
                 select docEvent.Document;
 
-            return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: _ => NoContent(),
-                Fail: errors => BadRequest(new { Errors = errors.Join() })));
+            return await outcome.Map(val => val.ToActionResult(_ => NoContent()));
         }
         
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [Route("{id:guid}/approve")]
         public async Task<IActionResult> ApproveDocument(Guid id, [FromBody] ApproveDocumentCommand command)
         {
             var outcome =
                 from doc in GetDocumentFromEvents(id)
                 from result in doc.Approve(command.Comment).AsTask()
-                from _ in _saveAndPublishEventAsync(result.Event)
+                from u in ValidateDocumentUser(result.Document, HttpContext)
+                from _ in SaveAndPublishEventAsync(result.Event)
                 select result.Document;
 
-            return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: _ => NoContent(),
-                Fail: errors => BadRequest(new { Errors = errors.Join() })));
+            return await outcome.Map(val => val.ToActionResult(_ => NoContent()));
         }
         
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [Route("{id:guid}/reject")]
         public async Task<IActionResult> RejectDocument(Guid id, [FromBody] RejectDocumentCommand command)
         {
             var outcome = 
                 from doc in GetDocumentFromEvents(id)
                 from result in doc.Reject(command.Reason).AsTask()
-                from _ in _saveAndPublishEventAsync(result.Event)
+                from u in ValidateDocumentUser(result.Document, HttpContext)
+                from _ in SaveAndPublishEventAsync(result.Event)
                 select result.Document;
             
-            return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: _ => NoContent(),
-                Fail: errors => BadRequest(new { Errors = errors.Join() })));
+            return await outcome.Map(val => val.ToActionResult(_ => NoContent()));
         }
 
         [HttpPut]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [Route("{id:guid}/send-for-approval")]
         public async Task<IActionResult> SendDocumentForApproval(Guid id)
         {
             var outcome = 
                 from doc in GetDocumentFromEvents(id)
                 from result in DocumentHelper.SendForApproval(doc).AsTask()
-                from _ in _saveAndPublishEventAsync(result.Event)
+                from u in ValidateDocumentUser(result.Document, HttpContext)
+                from _ in SaveAndPublishEventAsync(result.Event)
                 select result.Document;
 
-            return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: _ => NoContent(),
-                Fail: errors => BadRequest(new { Errors = errors.Join() })));
+            return await outcome.Map(val => val.ToActionResult(_ => NoContent()));
         }
     }
 }
