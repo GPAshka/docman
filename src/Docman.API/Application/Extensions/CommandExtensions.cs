@@ -1,5 +1,4 @@
 using System;
-using Docman.API.Application.Commands;
 using Docman.API.Application.Commands.Documents;
 using Docman.API.Application.Commands.Users;
 using Docman.Domain;
@@ -13,12 +12,11 @@ namespace Docman.API.Application.Extensions
 {
     public static class CommandExtensions
     {
-        public static Validation<Error, Event> ToEvent(this CreateDocumentCommand command, Guid documentId) =>
-            DocumentNumber.Create(command.Number)
-                .Bind(num => DocumentDescription.Create(command.Description)
-                    .Map(desc =>
-                        (Event) new DocumentCreatedEvent(new DocumentId(documentId), new Domain.DocumentAggregate.UserId(command.UserId), num,
-                            desc)));
+        public static Validation<Error, Event>
+            ToEvent(this CreateDocumentCommand command, Guid documentId, Guid userId) =>
+            (DocumentNumber.Create(command.Number), DocumentDescription.Create(command.Description)).Apply(
+                (num, desc) => (Event) new DocumentCreatedEvent(new DocumentId(documentId),
+                    new Domain.DocumentAggregate.UserId(userId), num, desc));
 
         public static Validation<Error, Event> ToEvent(this CreateUserCommand command, Guid userId,
             string userFirebaseId) =>

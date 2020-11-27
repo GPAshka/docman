@@ -3,7 +3,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Docman.API;
-using Docman.API.Application.Commands;
 using Docman.API.Application.Commands.Documents;
 using Docman.API.Application.Responses.Documents;
 using Docman.IntegrationTests.Extensions;
@@ -26,7 +25,7 @@ namespace Docman.IntegrationTests
         {
             // Arrange
             var createDocumentCommand =
-                new CreateDocumentCommand(Guid.NewGuid(), DateTime.UtcNow.Ticks.ToString(), "Test document");
+                new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
             var addFileCommand = new AddFileCommand("Test", "Test file");
 
             // Act

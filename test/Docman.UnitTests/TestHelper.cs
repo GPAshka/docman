@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Docman.Domain;
 using LanguageExt;
+using Microsoft.AspNetCore.Http;
 
 namespace Docman.UnitTests
 {
@@ -18,5 +19,8 @@ namespace Docman.UnitTests
 
         public static Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> ReadEventsFuncWithError(string error) =>
             _ => Task.FromResult(Validation<Error, IEnumerable<Event>>.Fail(new Seq<Error> { new(error) }));
+
+        public static Func<HttpContext, Task<Option<Guid>>> GetCurrentUserId() =>
+            _ => Task.FromResult<Option<Guid>>(Guid.Empty);
     }
 }

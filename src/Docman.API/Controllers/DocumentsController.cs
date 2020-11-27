@@ -27,6 +27,7 @@ namespace Docman.API.Controllers
         private readonly Func<Event, Task<Validation<Error, Unit>>> _saveAndPublishEventAsync;
         private readonly DocumentRepository.DocumentExistsByNumber _documentExistsByNumber;
         private readonly DocumentRepository.GetDocumentById _getDocumentById;
+        private readonly Func<HttpContext, Task<Option<Guid>>> _getCurrentUserId;
 
         private Func<Guid, Task<Validation<Error, Document>>> GetDocumentFromEvents =>
             id => DocumentHelper.GetDocumentFromEvents(_readEvents, id);
@@ -37,7 +38,7 @@ namespace Docman.API.Controllers
                 if (await _documentExistsByNumber(createCommand.Number))
                     return new DocumentWithNumberExistsError(createCommand.Number);
 
-                return Validation<Error, CreateDocumentCommand>.Success(createCommand);
+                return createCommand;
             };
 
         private Func<UpdateDocumentCommand, Task<Validation<Error, UpdateDocumentCommand>>> ValidateUpdateCommand =>
@@ -46,17 +47,18 @@ namespace Docman.API.Controllers
                 if (await _documentExistsByNumber(updateCommand.Number))
                     return new DocumentWithNumberExistsError(updateCommand.Number);
 
-                return Validation<Error, UpdateDocumentCommand>.Success(updateCommand);
+                return updateCommand;
             };
 
         public DocumentsController(Func<Guid, Task<Validation<Error, IEnumerable<Event>>>> readEvents,
             Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync, DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
-            DocumentRepository.GetDocumentById getDocumentById)
+            DocumentRepository.GetDocumentById getDocumentById, Func<HttpContext, Task<Option<Guid>>> getCurrentUserId)
         {
             _saveAndPublishEventAsync = saveAndPublishEventAsync;
             _readEvents = readEvents;
             _documentExistsByNumber = documentExistsByNumber;
             _getDocumentById = getDocumentById;
+            _getCurrentUserId = getCurrentUserId;
         }
 
         [HttpGet]
@@ -94,9 +96,15 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateDocument([FromBody] CreateDocumentCommand command)
         {
-            var outcome =
+            Task<Validation<Error, (CreateDocumentCommand Command, Guid UserId)>> ValidateCommandAndGetUserId() =>
+                from id in _getCurrentUserId(HttpContext)
+                    .Map(x => x.ToValidation<Error>("Current user Id was not found"))
                 from cmd in ValidateCreateCommand(command)
-                from evt in cmd.ToEvent(Guid.NewGuid()).AsTask()
+                select (cmd, id);
+            
+            var outcome =
+                from result in ValidateCommandAndGetUserId()
+                from evt in result.Command.ToEvent(Guid.NewGuid(), result.UserId).AsTask()
                 from _ in _saveAndPublishEventAsync(evt)
                 select evt;
 

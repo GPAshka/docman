@@ -2,7 +2,6 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Docman.API;
-using Docman.API.Application.Commands;
 using Docman.API.Application.Commands.Documents;
 using Docman.Domain.DocumentAggregate;
 using Docman.IntegrationTests.Extensions;
@@ -25,8 +24,7 @@ namespace Docman.IntegrationTests
         public async Task CreateDocumentTest()
         {
             // Arrange
-            var createDocumentCommand =
-                new CreateDocumentCommand(Guid.NewGuid(), DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
 
             // Act
             var documentUri = await _client.CreateDocumentAsync(createDocumentCommand);
@@ -36,7 +34,7 @@ namespace Docman.IntegrationTests
             Assert.NotNull(document);
             Assert.Equal(createDocumentCommand.Number, document.Number);
             Assert.Equal(createDocumentCommand.Description, document.Description);
-            Assert.Equal(createDocumentCommand.UserId, document.UserId);
+            //Assert.Equal(createDocumentCommand.UserId, document.UserId);  //TODO
             Assert.Equal(DocumentStatus.Draft.ToString(), document.Status);
         }
 
@@ -44,8 +42,7 @@ namespace Docman.IntegrationTests
         public async Task UpdateDocumentTest()
         {
             // Arrange
-            var createDocumentCommand =
-                new CreateDocumentCommand(Guid.NewGuid(), DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
             var updateDocumentCommand = new UpdateDocumentCommand($"{createDocumentCommand.Number}-update",
                 $"{createDocumentCommand.Description}-update");
 
@@ -65,8 +62,7 @@ namespace Docman.IntegrationTests
         public async Task SendDocumentForApprovalTest()
         {
             // Arrange
-            var createDocumentCommand =
-                new CreateDocumentCommand(Guid.NewGuid(), DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
             var addFileCommand = new AddFileCommand("Test", "Test file");
 
             // Act
@@ -85,8 +81,7 @@ namespace Docman.IntegrationTests
         public async Task ApproveDocumentTest()
         {
             // Arrange
-            var createDocumentCommand =
-                new CreateDocumentCommand(Guid.NewGuid(), DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
             var addFileCommand = new AddFileCommand("Test", "Test file");
             var approveDocumentCommand = new ApproveDocumentCommand("Approved");
 
@@ -108,8 +103,7 @@ namespace Docman.IntegrationTests
         public async Task RejectDocumentTest()
         {
             // Arrange
-            var createDocumentCommand =
-                new CreateDocumentCommand(Guid.NewGuid(), DateTime.UtcNow.Ticks.ToString(), "Test document");
+            var createDocumentCommand = new CreateDocumentCommand(DateTime.UtcNow.Ticks.ToString(), "Test document");
             var addFileCommand = new AddFileCommand("Test", "Test file");
             var rejectDocumentCommand = new RejectDocumentCommand("Rejected");
 

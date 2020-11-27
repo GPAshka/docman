@@ -14,7 +14,7 @@ namespace Docman.Domain.DocumentAggregate
 
         public static implicit operator DocumentDescription(string str) => New(str);
         
-        public static Validation<Error, Option<DocumentDescription>> Create(string value)
+        public static Validation<Error, Option<DocumentDescription>> Create(string? value)
         {
             if (string.IsNullOrEmpty(value))
                 return Option<DocumentDescription>.None;

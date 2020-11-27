@@ -2,7 +2,10 @@ using System;
 using System.Data;
 using System.Threading.Tasks;
 using Dapper;
+using Docman.Infrastructure.Dto;
+using LanguageExt;
 using Npgsql;
+using static LanguageExt.Prelude;
 
 namespace Docman.Infrastructure.PostgreSql
 {
@@ -21,6 +24,21 @@ namespace Docman.Infrastructure.PostgreSql
                     Email = email,
                     FirebaseId = firebaseId
                 });
+            };
+
+        public static Func<string, string, Task<Option<UserDatabaseDto>>> GetUserByFirebaseId =>
+            async (connectionString, firebaseId) =>
+            {
+                const string query =
+                    "SELECT \"Id\", \"Email\", \"FirebaseId\", \"DateCreated\" FROM users.\"Users\" WHERE \"FirebaseId\" = @FirebaseId";
+                
+                using IDbConnection connection = new NpgsqlConnection(connectionString);
+                var user = await connection.QuerySingleOrDefaultAsync<UserDatabaseDto>(query, new { FirebaseId = firebaseId });
+
+                if (user == null)
+                    return None;
+
+                return user;
             };
     }
 }
