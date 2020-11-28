@@ -91,3 +91,13 @@ Content-Type: application/json
 {
   "reason": "Document rejected" 
 }
+
+###
+
+GET {{url}}/{{createDocument.response.headers.Location}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+GET {{url}}/{{createDocument.response.headers.Location}}/files
+Authorization: Bearer {{accessToken}}
