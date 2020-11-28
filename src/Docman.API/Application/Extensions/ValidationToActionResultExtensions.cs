@@ -20,6 +20,9 @@ namespace Docman.API.Application.Extensions
                     if (errors.Any(e => e is UserUnauthorizedError))
                         return new UnauthorizedResult();
 
+                    if (errors.Any(e => e is DocumentNotFoundError || e is FileNotFoundError))
+                        return new NotFoundResult();
+
                     return new BadRequestObjectResult(new { Errors = errors.Join() });
                 });
     }

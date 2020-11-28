@@ -7,13 +7,11 @@ using Docman.API.Application.Helpers;
 using Docman.API.Application.Responses.Documents;
 using Docman.Domain;
 using Docman.Domain.Errors;
-using Docman.Domain.Extensions;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using static LanguageExt.Prelude;
 using Document = Docman.Domain.DocumentAggregate.Document;
 
 namespace Docman.API.Controllers
@@ -24,8 +22,7 @@ namespace Docman.API.Controllers
     public class DocumentsController : DocumentsBaseController
     {
         private readonly DocumentRepository.DocumentExistsByNumber _documentExistsByNumber;
-        private readonly DocumentRepository.GetDocumentById _getDocumentById;
-
+        
         private Func<CreateDocumentCommand, Task<Validation<Error, CreateDocumentCommand>>> ValidateCreateCommand =>
             async createCommand =>
             {
@@ -50,23 +47,27 @@ namespace Docman.API.Controllers
             DocumentRepository.DocumentExistsByNumber documentExistsByNumber,
             DocumentRepository.GetDocumentById getDocumentById,
             Func<HttpContext, Task<Option<Guid>>> getCurrentUserId)
-            : base(readEvents, saveAndPublishEventAsync, getCurrentUserId)
+            : base(readEvents, saveAndPublishEventAsync, getCurrentUserId, getDocumentById)
         {
             _documentExistsByNumber = documentExistsByNumber;
-            _getDocumentById = getDocumentById;
         }
 
         [HttpGet]
         [Route("{documentId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(Guid documentId)
         {
-            return await _getDocumentById(documentId)
-                .MapT(ResponseHelper.GenerateDocumentResponse)
-                .Map(document =>
-                    document.Match<IActionResult>(
-                        Some: Ok,
-                        None: NotFound()));
+            var outcome =
+                from doc in GetDocumentById(documentId)
+                    .MapT(ResponseHelper.GenerateDocumentResponse)
+                    .Map(doc => doc.ToValidation<Error>(new DocumentNotFoundError(documentId)))
+                from _ in ValidateDocumentUser(doc.UserId)
+                select doc;
+
+            return await outcome.Map(val => val.ToActionResult(Ok));
         }
 
         [HttpGet]
@@ -75,15 +76,14 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetDocumentHistory(Guid documentId)
         {
-            return await ReadEvents(documentId)
-                .MapT(events => events.Match(
-                    Empty: () => None,
-                    More: otherEvents => Some(ResponseHelper.EventsToDocumentHistory(otherEvents))))
-                .Map(val => val.Match(
-                    Fail: errors => BadRequest(string.Join(",", errors)),
-                    Succ: res => res.Match<IActionResult>(
-                        Some: Ok,
-                        None: NotFound)));
+            var outcome =
+                from doc in GetDocumentById(documentId)
+                    .Map(doc => doc.ToValidation<Error>(new DocumentNotFoundError(documentId)))
+                from _ in ValidateDocumentUser(doc.UserId)
+                from history in ReadEvents(documentId).MapT(ResponseHelper.EventsToDocumentHistory)
+                select (history, _);    //select empty variable to avoid error about Ambiguous call to SelectMany
+
+            return await outcome.Map(val => val.ToActionResult(res => Ok(res.history)));
         }
 
         [HttpPost]
@@ -104,9 +104,7 @@ namespace Docman.API.Controllers
                 from _ in SaveAndPublishEventAsync(evt)
                 select evt;
 
-            return await outcome.Map(val => val.Match<IActionResult>(
-                Succ: evt => Created($"documents/{evt.EntityId}", null),
-                Fail: errors => BadRequest(new { Errors = errors.Join() })));
+            return await outcome.Map(val => val.ToActionResult(evt => Created($"documents/{evt.EntityId}", null)));
         }
 
         [HttpPut]
@@ -125,7 +123,7 @@ namespace Docman.API.Controllers
 
             var outcome =
                 from result in ValidateCommandAndGetDocument()
-                from u in ValidateDocumentUser(result.Document, HttpContext)
+                from u in ValidateDocumentUser(result.Document.UserId.Value)
                 from docEvent in result.Document.Update(result.Command.Number, result.Command.Description).AsTask()
                 from _ in SaveAndPublishEventAsync(docEvent.Event)
                 select docEvent.Document;
@@ -143,8 +141,8 @@ namespace Docman.API.Controllers
         {
             var outcome =
                 from doc in GetDocumentFromEvents(id)
+                from u in ValidateDocumentUser(doc.UserId.Value)
                 from result in doc.Approve(command.Comment).AsTask()
-                from u in ValidateDocumentUser(result.Document, HttpContext)
                 from _ in SaveAndPublishEventAsync(result.Event)
                 select result.Document;
 
@@ -161,8 +159,8 @@ namespace Docman.API.Controllers
         {
             var outcome = 
                 from doc in GetDocumentFromEvents(id)
+                from u in ValidateDocumentUser(doc.UserId.Value)
                 from result in doc.Reject(command.Reason).AsTask()
-                from u in ValidateDocumentUser(result.Document, HttpContext)
                 from _ in SaveAndPublishEventAsync(result.Event)
                 select result.Document;
             
@@ -179,8 +177,8 @@ namespace Docman.API.Controllers
         {
             var outcome = 
                 from doc in GetDocumentFromEvents(id)
+                from u in ValidateDocumentUser(doc.UserId.Value)
                 from result in DocumentHelper.SendForApproval(doc).AsTask()
-                from u in ValidateDocumentUser(result.Document, HttpContext)
                 from _ in SaveAndPublishEventAsync(result.Event)
                 select result.Document;
 

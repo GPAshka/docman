@@ -5,6 +5,7 @@ using Docman.API.Application.Commands.Documents;
 using Docman.API.Application.Extensions;
 using Docman.API.Application.Helpers;
 using Docman.Domain;
+using Docman.Domain.Errors;
 using Docman.Infrastructure.Repositories;
 using LanguageExt;
 using Microsoft.AspNetCore.Authorization;
@@ -26,8 +27,9 @@ namespace Docman.API.Controllers
             Func<Event, Task<Validation<Error, Unit>>> saveAndPublishEventAsync,
             DocumentRepository.GetFile getFile,
             DocumentRepository.GetFiles getFiles,
-            Func<HttpContext, Task<Option<Guid>>> getCurrentUserId)
-            : base(readEvents, saveAndPublishEventAsync, getCurrentUserId)
+            Func<HttpContext, Task<Option<Guid>>> getCurrentUserId,
+            DocumentRepository.GetDocumentById getDocumentById)
+            : base(readEvents, saveAndPublishEventAsync, getCurrentUserId, getDocumentById)
         {
             _getFile = getFile;
             _getFiles = getFiles;
@@ -39,21 +41,31 @@ namespace Docman.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetFileAsync(Guid documentId, Guid fileId)
         {
-            return await _getFile(documentId, fileId)
-                .MapT(ResponseHelper.GenerateFileResponse)
-                .Map(file =>
-                    file.Match<IActionResult>(
-                        Some: Ok,
-                        None: NotFound()));
+            var outcome =
+                from doc in GetDocumentById(documentId)
+                    .Map(doc => doc.ToValidation<Error>(new DocumentNotFoundError(documentId)))
+                from _ in ValidateDocumentUser(doc.UserId)
+                from file in _getFile(documentId, fileId)
+                    .MapT(ResponseHelper.GenerateFileResponse)
+                    .Map(f => f.ToValidation<Error>(new FileNotFoundError(fileId)))
+                select file;
+
+            return await outcome.Map(val => val.ToActionResult(Ok));
         }
         
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetFilesAsync(Guid documentId)
         {
-            return await _getFiles(documentId)
-                .MapT(ResponseHelper.GenerateFileResponse)
-                .Map(Ok);
+            var outcome =
+                from doc in GetDocumentById(documentId)
+                    .Map(doc => doc.ToValidation<Error>(new DocumentNotFoundError(documentId)))
+                from _ in ValidateDocumentUser(doc.UserId)
+                from files in _getFiles(documentId)
+                    .MapT(ResponseHelper.GenerateFileResponse)
+                select files;
+
+            return await outcome.Map(Ok);
         }
         
         [HttpPost]
@@ -65,8 +77,8 @@ namespace Docman.API.Controllers
         {
             var outcome = 
                 from doc in GetDocumentFromEvents(documentId)
+                from u in ValidateDocumentUser(doc.UserId.Value)
                 from result in doc.AddFile(Guid.NewGuid(), command.FileName, command.FileDescription).AsTask()
-                from u in ValidateDocumentUser(result.Document, HttpContext)
                 from _ in SaveAndPublishEventAsync(result.Event)
                 select result.Event;
 

@@ -79,6 +79,7 @@ namespace Docman.API.Infrastructure
             var readEvents = par(EventStoreHelper.ReadEvents, _eventStoreConnectionString);
             var saveAndPublish = ConstructSaveAndPublishEventFunc();
 
+            var getDocument = par(DocumentPostgresRepository.GetDocumentByIdAsync, _postgresConnectionString);
             var getFile = par(DocumentPostgresRepository.GetFileByIdAsync, _postgresConnectionString);
             var getFiles = par(DocumentPostgresRepository.GetFilesAsync, _postgresConnectionString);
             
@@ -87,7 +88,8 @@ namespace Docman.API.Infrastructure
                     _postgresConnectionString)));
 
             return new DocumentFilesController(readEvents, saveAndPublish, new DocumentRepository.GetFile(getFile),
-                new DocumentRepository.GetFiles(getFiles), getCurrentUserId);
+                new DocumentRepository.GetFiles(getFiles), getCurrentUserId,
+                new DocumentRepository.GetDocumentById(getDocument));
         }
 
         private UsersController NewUsersController()
