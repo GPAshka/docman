@@ -1,18 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.API", "Docman.API\Docman.API.csproj", "{212C2553-F923-49DE-ABE4-3D6D5357EFF3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.API", "src\Docman.API\Docman.API.csproj", "{212C2553-F923-49DE-ABE4-3D6D5357EFF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.Domain", "Docman.Domain\Docman.Domain.csproj", "{1FD416C8-DA8B-4A13-93A5-8F620EBAE109}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.Domain", "src\Docman.Domain\Docman.Domain.csproj", "{1FD416C8-DA8B-4A13-93A5-8F620EBAE109}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.Infrastructure", "Docman.Infrastructure\Docman.Infrastructure.csproj", "{3B304526-BF9D-46A3-9A79-C59EF7DEA979}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.Infrastructure", "src\Docman.Infrastructure\Docman.Infrastructure.csproj", "{3B304526-BF9D-46A3-9A79-C59EF7DEA979}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F12B6F93-07E3-4EDF-9F1D-32DAB5E62271}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{330B3B2E-FC16-48DC-8F34-B54865D54134}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.UnitTests", "..\tests\Docman.UnitTests\Docman.UnitTests.csproj", "{181DDD05-05EA-4FF3-829D-6E622EA4A0CB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.UnitTests", "tests\Docman.UnitTests\Docman.UnitTests.csproj", "{181DDD05-05EA-4FF3-829D-6E622EA4A0CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.IntegrationTests", "..\tests\Docman.IntegrationTests\Docman.IntegrationTests.csproj", "{548FA2D4-1E0E-461A-96C4-FD725D69B800}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.IntegrationTests", "tests\Docman.IntegrationTests\Docman.IntegrationTests.csproj", "{548FA2D4-1E0E-461A-96C4-FD725D69B800}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
