@@ -4,7 +4,6 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Docman.API.Application.Commands;
 using Docman.API.Application.Commands.Documents;
 using Newtonsoft.Json;
 using Xunit;
@@ -102,7 +101,7 @@ namespace Docman.IntegrationTests.Extensions
 
         private static Uri CombineUri(Uri baseUri, string relativeUri)
         {
-            return new Uri(Path.Combine(baseUri.OriginalString, relativeUri), UriKind.Relative);
+            return new(Path.Combine(baseUri.OriginalString, relativeUri), UriKind.Relative);
         }
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Docman.API;
 using Docman.API.Application.Commands.Documents;
@@ -11,13 +10,10 @@ using Xunit;
 
 namespace Docman.IntegrationTests
 {
-    public class DocumentFilesIntegrationTests : IClassFixture<CustomWebApplicationFactory<Startup>>
+    public class DocumentFilesIntegrationTests : BaseIntegrationTests
     {
-        private readonly HttpClient _client;
-
-        public DocumentFilesIntegrationTests(CustomWebApplicationFactory<Startup> factory)
+        public DocumentFilesIntegrationTests(CustomWebApplicationFactory<Startup> factory) : base(factory)
         {
-            _client = factory.CreateClient();
         }
 
         [Fact]

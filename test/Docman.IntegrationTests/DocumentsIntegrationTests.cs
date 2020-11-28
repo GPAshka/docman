@@ -1,5 +1,4 @@
 using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Docman.API;
 using Docman.API.Application.Commands.Documents;
@@ -11,13 +10,10 @@ using Document = Docman.API.Application.Responses.Documents.Document;
 
 namespace Docman.IntegrationTests
 {
-    public class DocumentsIntegrationTests : IClassFixture<CustomWebApplicationFactory<Startup>>
+    public class DocumentsIntegrationTests : BaseIntegrationTests
     {
-        private readonly HttpClient _client;
-
-        public DocumentsIntegrationTests(CustomWebApplicationFactory<Startup> factory)
+        public DocumentsIntegrationTests(CustomWebApplicationFactory<Startup> factory) : base(factory)
         {
-            _client = factory.CreateClient();
         }
 
         [Fact]
@@ -34,7 +30,6 @@ namespace Docman.IntegrationTests
             Assert.NotNull(document);
             Assert.Equal(createDocumentCommand.Number, document.Number);
             Assert.Equal(createDocumentCommand.Description, document.Description);
-            //Assert.Equal(createDocumentCommand.UserId, document.UserId);  //TODO
             Assert.Equal(DocumentStatus.Draft.ToString(), document.Status);
         }
 
