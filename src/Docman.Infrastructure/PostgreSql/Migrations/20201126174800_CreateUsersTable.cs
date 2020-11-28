@@ -13,8 +13,8 @@ namespace Docman.Infrastructure.PostgreSql.Migrations
             Create.Table("Users")
                 .InSchema("users")
                 .WithColumn("Id").AsGuid().NotNullable().PrimaryKey()
-                .WithColumn("Email").AsFixedLengthString(255).NotNullable()
-                .WithColumn("FirebaseId").AsFixedLengthString(50).NotNullable()
+                .WithColumn("Email").AsString(255).NotNullable()
+                .WithColumn("FirebaseId").AsString(50).NotNullable()
                 .WithColumn("DateCreated").AsDateTime().NotNullable().WithDefaultValue(DateTime.UtcNow);
         }
 
