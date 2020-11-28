@@ -53,7 +53,7 @@ namespace Docman.API.Controllers
         {
             return await _signInUser(command.Email, command.Password)
                 .Map(val => val.Match<IActionResult>(
-                    Succ: Ok,
+                    Succ: token => Ok(new { AccessToken = token }),
                     Fail: errors => BadRequest(new { Errors = errors.Join() })));
         }
     }
