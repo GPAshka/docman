@@ -8,11 +8,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.Infrastructure", "Do
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F12B6F93-07E3-4EDF-9F1D-32DAB5E62271}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{330B3B2E-FC16-48DC-8F34-B54865D54134}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{330B3B2E-FC16-48DC-8F34-B54865D54134}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.UnitTests", "..\test\Docman.UnitTests\Docman.UnitTests.csproj", "{181DDD05-05EA-4FF3-829D-6E622EA4A0CB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.UnitTests", "..\tests\Docman.UnitTests\Docman.UnitTests.csproj", "{181DDD05-05EA-4FF3-829D-6E622EA4A0CB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.IntegrationTests", "..\test\Docman.IntegrationTests\Docman.IntegrationTests.csproj", "{548FA2D4-1E0E-461A-96C4-FD725D69B800}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docman.IntegrationTests", "..\tests\Docman.IntegrationTests\Docman.IntegrationTests.csproj", "{548FA2D4-1E0E-461A-96C4-FD725D69B800}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
