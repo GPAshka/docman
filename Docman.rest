@@ -1,0 +1,93 @@
+@url = https://localhost:5001
+@userEmail = docman@test.com
+@userPassword = 12345678
+@documentNumber = {{$timestamp}}
+
+### 
+//create new user
+
+POST {{url}}/users
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}"
+}
+
+### 
+//login with newly created user
+
+# @name login
+POST {{url}}/users/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}"
+}
+
+###
+@accessToken = {{login.response.body.accessToken}}
+
+###
+//create new document
+
+# @name createDocument
+POST {{url}}/documents
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "number": "{{documentNumber}}",
+  "description": "Test document"
+}
+
+###
+//add file to the document
+
+POST {{url}}/{{createDocument.response.headers.Location}}/files
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "fileName": "New file",
+  "fileDescription": "Test file"
+}
+
+###
+//update document
+
+PUT {{url}}/{{createDocument.response.headers.Location}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "number": "{{documentNumber}}-updated",
+  "description": "Test document"
+}
+
+###
+
+PUT {{url}}/{{createDocument.response.headers.Location}}/send-for-approval
+Authorization: Bearer {{accessToken}}
+
+###
+
+PUT {{url}}/{{createDocument.response.headers.Location}}/approve
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "comment": "Document approved" 
+}
+
+###
+
+PUT {{url}}/{{createDocument.response.headers.Location}}/reject
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "reason": "Document rejected" 
+}
