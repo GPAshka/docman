@@ -8,6 +8,7 @@ The domain tackles a simplified document management which revolves around the ch
 The referencing application uses monolith architecture model. Underneath it relies heavily on the following patterns:
 [CQRS](https://microservices.io/patterns/data/cqrs.html) and [Event sourcing](https://microservices.io/patterns/data/event-sourcing.html).
 Write (command) side uses [EventStore DB](https://www.eventstore.com) to store events. Read (query) side uses [PostgreSQL DB](https://www.postgresql.org) to return data to the client.
+Docman uses [Google Firebase](https://console.firebase.google.com/u/1/project/docman-a427d/overview) for the users authentication.
 
 ### Handling commands
 
